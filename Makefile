@@ -99,8 +99,9 @@ push: ## git push (lint+test before push)
 	git add .
 	git status
 	@echo "→ git commit & push"
+	git branch -M main
 	@git commit -m "chore: push $(VERSION)" 2>/dev/null || echo "nothing to commit"
-	git push origin HEAD
+	git push origin main
 
 # ── deploy ──────────────────────────────────────────────────────────────
 deploy: deploy-fly ## Default deploy = Fly.io
