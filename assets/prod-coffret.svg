@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f7fef9"/>
+  <ellipse cx="200" cy="236" rx="118" ry="104" fill="#e6f6ec"/>
+  <g>
+    <rect x="128" y="190" width="144" height="126" rx="14" fill="#16a34a"/>
+    <rect x="162" y="148" width="76" height="58" rx="10" fill="#15803d"/>
+    <rect x="136" y="202" width="128" height="98" rx="10" fill="#ffffff"/>
+    <rect x="162" y="158" width="76" height="38" rx="8" fill="#ffffff" opacity=".94"/>
+    <text x="200" y="183" text-anchor="middle" font-family="Arial,sans-serif" font-size="14" font-weight="700" fill="#15803d">Rachfa</text>
+    <path d="M136 214h128M200 202v98" stroke="#bbf7d0" stroke-width="2.5"/>
+    <g fill="#16a34a">
+      <circle cx="170" cy="238" r="16"/>
+      <rect x="165" y="226" width="10" height="24" rx="5"/>
+    </g>
+    <g fill="#fbbf24">
+      <circle cx="230" cy="238" r="16"/>
+      <rect x="225" y="226" width="10" height="24" rx="5"/>
+    </g>
+    <g fill="#f59e0b">
+      <circle cx="200" cy="274" r="16"/>
+      <rect x="195" y="262" width="10" height="24" rx="5"/>
+    </g>
+  </g>
+  <path d="M158 136l42 62 42-62" fill="none" stroke="#bbf7d0" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

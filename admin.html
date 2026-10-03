@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>لوحة التحكم - فيه شفاء</title>
+  <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+  <link rel="stylesheet" href="assets/admin-auth.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root{
+      --green-50:#EEF8F1;--green-100:#DDF0E3;--green-200:#B8E0C8;--green-300:#7EC79B;
+      --green-400:#4AAA6F;--green-500:#229D4E;--green-600:#16A34A;--green-700:#12843D;
+      --green-800:#0E5E2D;--green-900:#0B4523;--green-950:#07301A;
+      --ink:#0B4523;--body:#2E3A32;--muted:#5B6B60;--line:#E3EDE6;--white:#fff;
+      --radius:14px;--shadow:0 10px 30px -10px rgba(7,48,26,.22);
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:"Cairo",system-ui,sans-serif;color:var(--body);background:var(--green-50);line-height:1.6;}
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+    select,input{font-family:inherit}
+
+    .top{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;
+      background:linear-gradient(90deg,var(--green-800),var(--green-600));color:#fff;padding:.8rem 1.25rem;}
+    .brand{display:flex;align-items:center;gap:.6rem;font-weight:700}
+    .brand img{height:40px;width:40px;border-radius:10px;object-fit:cover}
+    .brand b{color:#BBF7D0}
+    .top-actions{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;gap:.45rem;border-radius:999px;padding:.45rem 1rem;font-weight:700;font-size:.86rem;transition:background .2s,color .2s}
+    .btn-light{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35)}
+    .btn-light:hover{background:#fff;color:var(--green-800)}
+    .btn-add{background:#fff;color:var(--green-800)}
+    .btn-add:hover{background:#DDF0E3}
+    .btn .icon{width:16px;height:16px}
+
+    .wrap{max-width:76rem;margin:0 auto;padding:1.25rem 1.25rem 3rem}
+    .intro{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem}
+    .intro h1{font-size:1.3rem;color:var(--green-950)}
+    .intro .pill{background:var(--green-600);color:#fff;font-size:.72rem;font-weight:800;padding:.2rem .6rem;border-radius:999px}
+
+    .export-bar{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;background:var(--white);border:1px solid var(--line);
+      border-radius:var(--radius);box-shadow:var(--shadow);padding:.8rem 1rem;margin-bottom:1.4rem}
+    .export-bar .bar-label{display:inline-flex;align-items:center;gap:.45rem;font-size:.86rem;font-weight:700;color:var(--green-900);white-space:nowrap}
+    .export-bar select{height:2.5rem;border:1.5px solid var(--green-200);border-radius:10px;padding:0 .7rem;font-size:.9rem;color:var(--ink);outline:none}
+    .export-bar select:focus{border-color:var(--green-600);box-shadow:0 0 0 3px rgba(22,163,74,.15)}
+    .btn-excel{background:var(--green-600);color:#fff;height:2.5rem;padding:0 1.1rem;border-radius:999px;font-weight:800;font-size:.88rem;display:inline-flex;align-items:center;gap:.5rem;transition:background .2s}
+    .btn-excel:hover{background:var(--green-800)}
+    .btn-excel .icon{width:17px;height:17px;flex-shrink:0;display:block}
+    .export-bar .spacer{flex:1}
+    .export-bar .hint{font-size:.78rem;color:var(--muted);white-space:nowrap}
+
+    .kpis{display:grid;gap:1rem;margin-bottom:1.4rem}
+    @media(min-width:640px){.kpis{grid-template-columns:repeat(2,1fr)}}
+    @media(min-width:1024px){.kpis{grid-template-columns:repeat(4,1fr)}}
+    .kpi{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.1rem 1.2rem}
+    .kpi .k-label{font-size:.8rem;font-weight:700;color:var(--muted);display:flex;gap:.4rem;align-items:center}
+    .kpi .k-label svg{width:16px;height:16px;color:var(--green-600)}
+    .kpi .k-value{font-size:1.55rem;font-weight:900;color:var(--green-900);margin-top:.35rem}
+    .kpi .k-sub{font-size:.75rem;color:var(--muted);margin-top:.15rem}
+
+    .charts{display:grid;gap:1rem;margin-bottom:1.4rem}
+    @media(min-width:1024px){.charts{grid-template-columns:1fr 1fr}}
+    .chart-card{background:var(--white);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:1.1rem 1.2rem}
+    .chart-card h2{font-size:.98rem;color:var(--green-900);margin-bottom:.8rem}
+    .chart-box{position:relative;height:280px}
+
+    .orders-card{grid-column:1/-1}
+    .orders-head{display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:.8rem}
+    .orders-head h2{font-size:.98rem;color:var(--green-900);margin:0}
+    .orders-filters{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+    .orders-filters input[type=date]{height:2.2rem;border:1.5px solid var(--green-200);border-radius:9px;padding:0 .6rem;font-size:.84rem;color:var(--ink);background:#fff}
+    .orders-filters input[type=date]:focus{outline:none;border-color:var(--green-600);box-shadow:0 0 0 3px rgba(22,163,74,.12)}
+    .orders-filters span{color:var(--muted);font-weight:700}
+    .orders-filters button{height:2.2rem;padding:0 .9rem;border-radius:999px;font-weight:800;font-size:.82rem;transition:background .2s,color .2s}
+    .btn-filter{background:var(--green-600);color:#fff}
+    .btn-filter:hover{background:var(--green-800)}
+    .btn-reset{background:var(--green-100);color:var(--green-800)}
+    .btn-reset:hover{background:var(--green-200)}
+    .orders-scroll{max-height:460px;overflow-y:auto;border:1px solid var(--line);border-radius:14px;background:var(--green-50);padding:.6rem;scrollbar-width:thin;scrollbar-color:var(--green-300) var(--green-50)}
+    .orders-scroll::-webkit-scrollbar{width:6px}
+    .orders-scroll::-webkit-scrollbar-thumb{background:var(--green-300);border-radius:999px}
+    .buyer-group{background:var(--white);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:.7rem;box-shadow:0 2px 8px rgba(7,48,26,.06)}
+    .buyer-group:last-child{margin-bottom:0}
+    .buyer-head{background:var(--green-50);padding:.55rem .8rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+    .buyer-head .buyer-name{font-weight:800;color:var(--green-950);font-size:.88rem;display:flex;align-items:center;gap:.4rem}
+    .buyer-head .buyer-phone{font-size:.78rem;color:var(--muted);background:#fff;border:1px solid var(--line);padding:.1rem .5rem;border-radius:999px}
+    .buyer-head .buyer-total{font-weight:800;color:var(--green-700);font-size:.88rem}
+    .buyer-head .buyer-date{font-size:.75rem;color:var(--muted)}
+    .buyer-items table{width:100%;border-collapse:collapse;font-size:.84rem}
+    .buyer-items th{text-align:right;padding:.4rem .7rem;color:var(--muted);font-weight:700;font-size:.74rem;border-bottom:1px solid var(--line);background:#fff}
+    .buyer-items td{padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:middle}
+    .buyer-items tr:last-child td{border-bottom:none}
+    .cat-tag{display:inline-block;background:var(--green-100);color:var(--green-800);font-size:.7rem;font-weight:700;border-radius:999px;padding:.1rem .55rem}
+    .empty-chart{text-align:center;color:var(--muted);padding:2.5rem 0;font-size:.9rem}
+    .orders-summary-bar{font-size:.78rem;color:var(--muted);margin-top:.6rem;text-align:center}
+
+    .foot-bar{max-width:76rem;margin:0 auto;padding:0 1.25rem 2rem}
+    .foot-bar a{color:var(--green-700);font-weight:700;font-size:.88rem}
+    /* RTL enterprise alignment */
+    .kpi, .kpi .k-label, .kpi .k-value, .kpi .k-sub, .chart-card h2, .intro h1, .export-bar .hint, .orders-summary-bar{ text-align:right; }
+    .buyer-head .buyer-phone{direction:ltr;unicode-bidi:embed}
+  </style>
+</head>
+<body>
+
+  <header class="top">
+    <div class="brand">
+      <img src="assets/logo.jpg" alt="Logo fihi-chifae">
+      <span>فيه <b>شفاء</b> · لوحة التحكم</span>
+    </div>
+    <div class="top-actions">
+      <a class="btn btn-light" href="index.html">← المتجر</a>
+      <a class="btn btn-add" href="admin-add.html" id="btnGotoAdd">+ إضافة منتج</a>
+      <button class="btn btn-light" id="btnLogout" title="تسجيل الخروج">تسجيل الخروج</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <div class="intro">
+      <h1>لوحة تحكم المبيعات <span class="pill">محمي</span></h1>
+    </div>
+
+    <!-- monthly excel export -->
+    <div class="export-bar">
+      <label class="bar-label" for="monthSel">التقرير الشهري :</label>
+      <select id="monthSel"></select>
+      <button class="btn-excel" id="btnExport">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>تحميل المبيعات (Excel)</span>
+      </button>
+      <span class="spacer"></span>
+      <span class="hint">المنتج · السعر · الكمية · الزبون</span>
+    </div>
+
+    <!-- KPI cards -->
+    <div class="kpis">
+      <div class="kpi">
+        <div class="k-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 7h7v7" stroke-linecap="round" stroke-linejoin="round"/></svg>إجمالي المبيعات</div>
+        <div class="k-value" id="kRevenue">0 MAD</div>
+        <div class="k-sub" id="kRevenueSub">مجموع كل الفترات</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 9h18" stroke-linecap="round"/></svg>إيرادات هذا الشهر</div>
+        <div class="k-value" id="kMonthRevenue">0 MAD</div>
+        <div class="k-sub" id="kMonthSub">—</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1.6" fill="currentColor" stroke="none"/><circle cx="20" cy="21" r="1.6" fill="currentColor" stroke="none"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-linecap="round" stroke-linejoin="round"/></svg>الطلبات</div>
+        <div class="k-value" id="kOrders">0</div>
+        <div class="k-sub" id="kOrdersSub">الإجمالي</div>
+      </div>
+      <div class="kpi">
+        <div class="k-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-linecap="round"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke-linecap="round"/></svg>الوحدات المباعة</div>
+        <div class="k-value" id="kUnits">0</div>
+        <div class="k-sub" id="kUnitsSub">جميع الفترات</div>
+      </div>
+    </div>
+
+    <!-- charts -->
+    <div class="charts">
+      <div class="chart-card">
+        <h2>إيرادات آخر 6 أشهر</h2>
+        <div class="chart-box"><canvas id="chartRevenue"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h2>المنتجات الأكثر مبيعاً</h2>
+        <div class="chart-box"><canvas id="chartTop"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h2>المبيعات حسب الفئة</h2>
+        <div class="chart-box"><canvas id="chartCat"></canvas></div>
+      </div>
+      <div class="chart-card orders-card">
+        <div class="orders-head">
+          <h2>طلبات هذا الشهر</h2>
+          <div class="orders-filters">
+            <input type="date" id="ordersFrom" title="من">
+            <span>—</span>
+            <input type="date" id="ordersTo" title="إلى">
+            <button class="btn-filter" id="ordersFilterBtn">تصفية</button>
+            <button class="btn-reset" id="ordersResetBtn">الشهر الحالي</button>
+          </div>
+        </div>
+        <div class="orders-scroll" id="ordersScroll">
+          <div id="ordersTable"><div class="empty-chart">جاري التحميل…</div></div>
+        </div>
+        <div class="orders-summary-bar" id="ordersSummary"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <div class="foot-bar">
+    <a href="admin-add.html">→ إدارة المنتجات والفئات</a>
+  </div>
+
+  <script src="assets/admin-auth.js?v=4"></script>
+  <script src="assets/admin.js?v=9"></script>
+</body>
+</html>
+

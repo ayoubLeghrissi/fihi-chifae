@@ -1,0 +1,5 @@
+# Runtime dependencies
+openpyxl==3.1.5
+Pillow==10.3.0
+
+# Optional: used by some environments, keep stdlib otherwise

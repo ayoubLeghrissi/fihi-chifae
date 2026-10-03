@@ -1,0 +1,33 @@
+name: Security — scheduled audit
+
+on:
+  schedule:
+    - cron: "0 4 * * 1" # Mondays 04:00 UTC
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - "app/**"
+      - "requirements*.txt"
+      - "Dockerfile"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12", cache: pip }
+      - run: pip install pip-audit bandit
+      - run: bandit -r app -f json -o bandit.json || true
+      - run: pip-audit --desc --format=json --output pip-audit.json || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scheduled-audit
+          path: |
+            bandit.json
+            pip-audit.json

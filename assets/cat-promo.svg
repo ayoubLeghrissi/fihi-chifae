@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f0fdf4"/>
+  <ellipse cx="200" cy="210" rx="150" ry="138" fill="#dcfce7"/>
+  <circle cx="80" cy="96" r="16" fill="#bbf7d0"/>
+  <circle cx="322" cy="74" r="11" fill="#bbf7d0"/>
+  <circle cx="300" cy="340" r="18" fill="#86efac" opacity=".45"/>
+  <circle cx="88" cy="330" r="9" fill="#86efac" opacity=".45"/>
+  <g>
+    <rect x="108" y="168" width="184" height="150" rx="18" fill="#16a34a"/>
+    <rect x="150" y="128" width="100" height="56" rx="12" fill="#15803d"/>
+    <rect x="118" y="182" width="164" height="120" rx="12" fill="#ffffff"/>
+    <rect x="150" y="140" width="100" height="32" rx="8" fill="#ffffff" opacity=".92"/>
+    <text x="200" y="161" text-anchor="middle" font-family="Arial,sans-serif" font-size="15" font-weight="700" fill="#15803d">Coffret</text>
+    <path d="M118 192h164M200 182v120" stroke="#bbf7d0" stroke-width="3"/>
+    <g fill="#16a34a">
+      <circle cx="160" cy="222" r="18"/>
+      <rect x="154" y="208" width="12" height="28" rx="6"/>
+    </g>
+    <g fill="#fbbf24">
+      <circle cx="240" cy="222" r="18"/>
+      <rect x="234" y="208" width="12" height="28" rx="6"/>
+    </g>
+    <g fill="#f59e0b">
+      <circle cx="200" cy="268" r="18"/>
+      <rect x="194" y="254" width="12" height="28" rx="6"/>
+    </g>
+    <text x="200" y="358" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" font-weight="800" fill="#14532d">-50%</text>
+  </g>
+  <path d="M148 116l52 78 52-78" fill="none" stroke="#bbf7d0" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

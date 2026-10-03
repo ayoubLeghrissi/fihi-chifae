@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fcd34d"/>
+      <stop offset="1" stop-color="#b45309"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="#f7fef9"/>
+  <ellipse cx="200" cy="236" rx="118" ry="104" fill="#e6f6ec"/>
+  <g>
+    <rect x="124" y="158" width="152" height="180" rx="32" fill="url(#a)"/>
+    <rect x="136" y="120" width="128" height="50" rx="25" fill="#92400e"/>
+    <rect x="148" y="130" width="104" height="11" rx="5" fill="#fef3c7" opacity=".4"/>
+    <rect x="138" y="210" width="124" height="46" rx="10" fill="#ffffff" opacity=".24"/>
+    <text x="200" y="239" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#78350f">ROYAL</text>
+    <g fill="#92400e">
+      <ellipse cx="166" cy="286" rx="11" ry="14" transform="rotate(-22 166 286)"/>
+      <ellipse cx="200" cy="280" rx="11" ry="14" transform="rotate(6 200 280)"/>
+      <ellipse cx="234" cy="286" rx="11" ry="14" transform="rotate(24 234 286)"/>
+    </g>
+    <path d="M200 158c-12-8-18-20-18-36 0-4 6-4 8-2 2-6 8-8 10-6 2-2 8 0 10 6 2-2 8 2 8 6 0 16-6 28-18 36z" fill="#ffffff" opacity=".9"/>
+  </g>
+  <path d="M88 176c24-8 42 4 40 24" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+  <path d="M312 192c-24-8-42 4-40 24" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round" opacity=".6"/>
+</svg>

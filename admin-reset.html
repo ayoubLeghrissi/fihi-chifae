@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>إعادة تعيين كلمة المرور · فيه شفاء</title>
+  <style>
+    :root{
+      --green-50:#EAF7EF;--green-100:#D6F0E0;--green-200:#ADE3C3;--green-600:#16A34A;
+      --green-800:#15803D;--green-900:#116B33;--green-950:#0C3E22;
+      --ink:#0F172A;--muted:#6B7280;--bg:#0E3D24;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;background:
+        radial-gradient(1200px 500px at 50% -10%, var(--green-800), transparent 60%),
+        var(--bg);
+      min-height:100vh;display:grid;place-items:center;padding:1rem;
+      font-family:'Cairo','Segoe UI',system-ui,Arial,sans-serif;color:var(--ink);
+    }
+    .auth-card{
+      width:100%;max-width:24rem;background:#fff;border-radius:18px;
+      box-shadow:0 30px 60px -20px rgba(0,0,0,.5);padding:1.9rem 1.6rem;
+    }
+    .brand{display:block;font-weight:800;color:var(--green-900);font-size:1.05rem;text-align:center}
+    .brand span{background:var(--green-100);border-radius:999px;padding:.05rem .6rem;font-size:.68rem;color:var(--green-800)}
+    .auth-card h1{font-size:1.12rem;color:var(--green-950);text-align:center;margin:.4rem 0 .1rem}
+    .intro{font-size:.85rem;color:var(--muted);text-align:center;margin-bottom:1.1rem}
+    .auth-form{display:grid;gap:.9rem;text-align:right}
+    .auth-field{display:flex;flex-direction:column;gap:.3rem}
+    .auth-field label{font-size:.8rem;font-weight:700;color:var(--green-900)}
+    .auth-field input{
+      height:2.7rem;border:1.5px solid var(--green-200);border-radius:10px;padding:0 .8rem;
+      font-family:inherit;font-size:.92rem;color:var(--ink);background:#fff;width:100%;
+    }
+    .auth-field input:focus{outline:none;border-color:var(--green-600);box-shadow:0 0 0 3px rgba(22,163,74,.15)}
+    .btn-login{
+      height:2.9rem;border-radius:999px;background:var(--green-600);color:#fff;font-weight:800;font-size:.95rem;
+      display:inline-flex;align-items:center;justify-content:center;gap:.5rem;border:0;cursor:pointer;text-decoration:none;
+      width:100%;transition:background .2s,transform .15s;
+    }
+    .btn-login:hover{background:var(--green-800);transform:translateY(-1px)}
+    .auth-error{min-height:1.2rem;font-size:.82rem;font-weight:600;color:#B3261E;text-align:center}
+    .auth-error.ok{color:var(--green-800)}
+    .ok-box{text-align:center;display:grid;gap:1rem}
+    .ok-box p{font-size:.9rem;color:var(--green-900)}
+    .link-box{text-align:center;margin-top:1rem;font-size:.8rem}
+    .link-box a{color:var(--green-800);font-weight:700;text-decoration:none}
+  </style>
+</head>
+<body>
+  <main class="auth-card">
+    <span class="brand">فيه شفاء <span>آمن</span></span>
+    <h1>إعادة تعيين كلمة المرور</h1>
+    <p class="intro">اختر كلمة مرور جديدة (8 أحرف على الأقل).</p>
+
+    <form id="resetForm" class="auth-form" autocomplete="off">
+      <div class="auth-field">
+        <label for="pw1">كلمة المرور الجديدة</label>
+        <input type="password" id="pw1" minlength="8" required placeholder="8 أحرف على الأقل">
+      </div>
+      <div class="auth-field">
+        <label for="pw2">تأكيد كلمة المرور</label>
+        <input type="password" id="pw2" minlength="8" required placeholder="أعد كتابة كلمة المرور">
+      </div>
+      <button class="btn-login" type="submit">تحديث كلمة المرور</button>
+    </form>
+
+    <p id="msg" class="auth-error"></p>
+
+    <div id="okBox" class="ok-box" hidden>
+      <p>تم تحديث كلمة المرور. يرجى تسجيل الدخول بكلمة المرور الجديدة.</p>
+      <a class="btn-login" href="admin.html">تسجيل الدخول</a>
+    </div>
+
+    <div class="link-box"><a href="admin.html">← العودة لتسجيل الدخول</a></div>
+  </main>
+
+  <script>
+    (function () {
+      'use strict';
+      var $ = function (s) { return document.querySelector(s); };
+      var msg = $('#msg');
+      function show(text, ok) { msg.textContent = text; msg.className = ok ? 'auth-error ok' : 'auth-error'; }
+      var token = (new URLSearchParams(window.location.search)).get('token') || '';
+      if (!token.trim()) { show('رابط غير صالح: لا يوجد رمز استعادة.'); return; }
+
+      $('#resetForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var pw1 = $('#pw1').value;
+        var pw2 = $('#pw2').value;
+        if (pw1.length < 8) { show('يجب أن تتكون كلمة المرور من 8 أحرف على الأقل.'); return; }
+        if (pw1 !== pw2) { show('كلمتا المرور غير متطابقتين.'); return; }
+        show('جاري التحديث…', true);
+        fetch('/api/v1/admin/reset/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: token, password: pw1 }),
+        }).then(function (r) {
+          return r.json().then(function (d) { return { ok: r.ok, data: d }; });
+        }).then(function (res) {
+          if (!res.ok) {
+            var e = res.data.error;
+            show((typeof e === 'string' ? e : (e && e.message)) || 'خطأ في الخادم.');
+            return;
+          }
+          $('#resetForm').style.display = 'none';
+          show('');
+          $('#okBox').hidden = false;
+        }).catch(function () { show('تعذر الاتصال بالخادم.'); });
+      });
+    })();
+  </script>
+</body>
+</html>

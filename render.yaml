@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: fihi-chifae
+    env: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    region: frankfurt # close to Morocco; change as needed
+    healthCheckPath: /api/v1/ping
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: FIHI_ADMIN_USER
+        sync: false
+      - key: FIHI_ADMIN_PASSWORD
+        sync: false
+      - key: FIHI_ADMIN_EMAIL
+        sync: false
+    autoDeploy: true

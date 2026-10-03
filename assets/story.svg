@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="420" viewBox="0 0 600 420">
+  <defs>
+    <linearGradient id="hf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="420" fill="#f0fdf4"/>
+  <circle cx="90" cy="70" r="34" fill="#bbf7d0"/>
+  <circle cx="520" cy="60" r="22" fill="#bbf7d0"/>
+  <circle cx="560" cy="360" r="40" fill="#86efac" opacity=".4"/>
+  <circle cx="30" cy="360" r="24" fill="#86efac" opacity=".4"/>
+  <path d="M70 120c90-40 210-30 320 10" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round" opacity=".5"/>
+  <path d="M540 140c-70-30-160-30-230-10" fill="none" stroke="#15803d" stroke-width="4" stroke-linecap="round" opacity=".4"/>
+  <!-- basket -->
+  <path d="M150 250h300l-24 96c-6 26-30 42-58 42H232c-28 0-52-16-58-42z" fill="#d6b27c"/>
+  <path d="M150 258h300" stroke="#b98f52" stroke-width="8"/>
+  <path d="M150 292h300" stroke="#c6a26a" stroke-width="5" opacity=".7"/>
+  <path d="M160 330h280" stroke="#b98f52" stroke-width="5" opacity=".5"/>
+  <!-- honey jar -->
+  <g>
+    <rect x="248" y="120" width="104" height="150" rx="26" fill="#ffffff" stroke="#e5e7eb" stroke-width="3"/>
+    <rect x="260" y="96" width="80" height="34" rx="17" fill="#16a34a"/>
+    <path d="M258 180h84a20 20 0 0 1-20 20h-44a20 20 0 0 1-20-20z" fill="url(#hf)"/>
+    <circle cx="300" cy="218" r="32" fill="url(#hf)"/>
+    <path d="M300 268v46" stroke="#d97706" stroke-width="10" stroke-linecap="round"/>
+    <path d="M300 314c-10-8-16-18-16-28 0-4 5-4 7-2 4 6 5 10 9 14 4-6 6-10 9-14 2-2 7-2 7 2 0 10-6 20-16 28z" fill="url(#hf)"/>
+  </g>
+  <!-- argan bottle -->
+  <g>
+    <rect x="396" y="180" width="46" height="84" rx="10" fill="#fde68a"/>
+    <rect x="410" y="162" width="18" height="26" rx="6" fill="#ca8a04"/>
+    <circle cx="419" cy="160" r="8" fill="#a16207"/>
+    <rect x="402" y="204" width="34" height="22" rx="6" fill="#ffffff"/>
+    <path d="M419 282c0 10 11 16 5 26-3 6-10 6-12 0-3-8 7-16 7-26z" fill="#fde68a"/>
+  </g>
+  <!-- leaves behind -->
+  <g fill="#22c55e">
+    <path d="M200 128c26-8 44 8 38 26-6 18-34 24-46 12 6-8 10-16 8-22-12 2-16-12 0-16z"/>
+    <path d="M420 110c24-8 42 8 36 24-6 16-32 22-44 10 6-7 9-15 8-20-11 2-16-12 0-14z"/>
+  </g>
+  <g fill="#15803d">
+    <path d="M216 148c16-5 26 6 22 18-4 12-19 16-27 8 4-5 6-10 5-14-7 1-11-8 0-12z"/>
+    <path d="M404 128c16-5 26 6 22 18-4 12-19 16-27 8 4-5 6-10 5-14-7 1-11-8 0-12z"/>
+  </g>
+</svg>

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="560" viewBox="0 0 560 560">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dcfce7"/>
+      <stop offset="1" stop-color="#f0fdf4"/>
+    </linearGradient>
+    <linearGradient id="honey" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#d97706"/>
+    </linearGradient>
+    <linearGradient id="amlou" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fcd34d"/>
+      <stop offset="1" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="argan" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="1" stop-color="#ca8a04"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="280" cy="330" rx="215" ry="210" fill="url(#bg)"/>
+  <circle cx="120" cy="120" r="26" fill="#bbf7d0"/>
+  <circle cx="455" cy="95" r="18" fill="#86efac"/>
+  <circle cx="70" cy="420" r="14" fill="#bbf7d0"/>
+  <circle cx="500" cy="360" r="10" fill="#4ade80" opacity=".7"/>
+
+  <!-- leaves -->
+  <g fill="#22c55e">
+    <path d="M78 210c30-6 52 14 46 42-6 28-40 36-56 20 8-8 12-16 10-24-14 4-22-26 0-38z"/>
+    <path d="M470 240c-30-6-52 14-46 42 6 28 40 36 56 20-8-8-12-16-10-24 14 4 22-26 0-38z" opacity=".75"/>
+  </g>
+  <g fill="#15803d">
+    <path d="M96 236c22-4 38 10 33 30-5 20-28 26-40 15 6-6 9-12 7-17-10 3-16-18 0-28z"/>
+    <path d="M462 266c-22-4-38 10-33 30 5 20 28 26 40 15-6-6-9-12-7-17 10 3 16-18 0-28z" opacity=".75"/>
+  </g>
+  <path d="M150 150c40-34 90-50 140-44" fill="none" stroke="#4ade80" stroke-width="4" stroke-linecap="round" opacity=".5"/>
+
+  <!-- argan oil bottle -->
+  <g>
+    <rect x="112" y="210" width="52" height="88" rx="10" fill="url(#argan)"/>
+    <rect x="128" y="188" width="20" height="30" rx="6" fill="#ca8a04"/>
+    <circle cx="138" cy="186" r="9" fill="#a16207"/>
+    <rect x="118" y="240" width="40" height="34" rx="6" fill="#ffffff" opacity=".9"/>
+    <text x="138" y="262" text-anchor="middle" font-family="Arial,sans-serif" font-size="11" font-weight="700" fill="#15803d">ARAGAN</text>
+    <path d="M138 312c0 14 14 22 6 36-4 8-14 8-16 0-4-12 10-22 10-36z" fill="url(#argan)"/>
+    <ellipse cx="138" cy="300" rx="26" ry="6" fill="#fef3c7"/>
+  </g>
+
+  <!-- honey jar -->
+  <g>
+    <rect x="242" y="150" width="150" height="210" rx="34" fill="#ffffff" stroke="#e5e7eb" stroke-width="3"/>
+    <rect x="258" y="120" width="118" height="44" rx="22" fill="#16a34a"/>
+    <rect x="268" y="128" width="98" height="12" rx="6" fill="#ffffff" opacity=".3"/>
+    <path d="M262 220h110a26 26 0 0 1-26 26h-58a26 26 0 0 1-26-26z" fill="url(#honey)"/>
+    <circle cx="317" cy="278" r="42" fill="url(#honey)"/>
+    <path d="M317 244c8 20-6 26-6 34-2 6 2 10 6 10s8-4 6-10c0-8-14-14-6-34z" fill="#92400e"/>
+    <path d="M317 222c6-22-6-22-2-36 2 10 8 12 6 24 4-10-2-16 1-24 6 8 12 16 12 30-6 8-17 8-17 6z" fill="#fbbf24"/>
+    <path d="M282 162c8-18 38-22 46-40 14-22 10-40 14-54" fill="none" stroke="#22c55e" stroke-width="5" stroke-linecap="round"/>
+  </g>
+
+  <!-- amlou jar -->
+  <g>
+    <rect x="392" y="290" width="92" height="120" rx="20" fill="url(#amlou)"/>
+    <rect x="402" y="266" width="72" height="36" rx="18" fill="#92400e"/>
+    <rect x="410" y="274" width="56" height="8" rx="4" fill="#fef3c7" opacity=".4"/>
+    <ellipse cx="438" cy="342" rx="30" ry="7" fill="#78350f"/>
+    <g fill="#92400e">
+      <ellipse cx="412" cy="326" rx="9" ry="12" transform="rotate(-20 412 326)"/>
+      <ellipse cx="438" cy="322" rx="9" ry="12" transform="rotate(8 438 322)"/>
+      <ellipse cx="462" cy="330" rx="9" ry="12" transform="rotate(24 462 330)"/>
+    </g>
+    <circle cx="448" cy="244" r="7" fill="#4ade80"/>
+  </g>
+</svg>
