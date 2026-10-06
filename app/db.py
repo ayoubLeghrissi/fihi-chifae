@@ -18,66 +18,59 @@ db_lock = _lock
 # ---------------------------------------------------------------------------
 
 SEED_CATEGORIES = [
-    ("amlou",       "أملو",      "Amlou",       "Amlou",      config.P + "prod-amlou.svg"),
-    ("miels",       "العسل",     "Miel",        "Honey",      config.P + "prod-miel.svg"),
-    ("huiles",      "الزيوت",    "Huiles",      "Oils",       config.P + "cat-argan.svg"),
-    ("cosmetiques", "عطور",      "Parfums",     "Perfumes",   config.P + "cat-promo.svg"),
-    ("autres",      "منتوجات أخرى", "Autres produits", "Other products", config.P + "prod-pack.svg"),
-    ("recettes",    "وصفات فيه شفاء", "Recettes", "Recipes",  config.P + "prod-coffret.svg"),
-    ("packs",       "باقات فيه شفاء", "Packs",  "Packs",     config.P + "prod-pack.svg"),
-    ("thes",        "الشاي",     "Thés",        "Teas",       config.P + "story.svg"),
+    ("amlou", "أملو", "Amlou", "Amlou", config.P + "prod-amlou.svg"),
+    ("miels", "العسل", "Miel", "Honey", config.P + "prod-miel.svg"),
+    ("huiles", "الزيوت", "Huiles", "Oils", config.P + "cat-argan.svg"),
+    ("cosmetiques", "عطور", "Parfums", "Perfumes", config.P + "cat-promo.svg"),
+    ("autres", "منتوجات أخرى", "Autres produits", "Other products", config.P + "prod-pack.svg"),
+    ("recettes", "وصفات فيه شفاء", "Recettes", "Recipes", config.P + "prod-coffret.svg"),
+    ("packs", "باقات فيه شفاء", "Packs", "Packs", config.P + "prod-pack.svg"),
+    ("thes", "الشاي", "Thés", "Teas", config.P + "story.svg"),
 ]
 
 # (id, name, cat, min, max, img, ribbon, featured)
 SEED_PRODUCTS = [
-    ("s-amlou-01", "أملو بالكاوكاو وزيت الزيتون والعسل",               "amlou", 95,  None, None, 0, 0),
-    ("s-amlou-02", "أملو باللوز وزيت أركان والعسل الحر",                "amlou", 109, 239, None, 1, 1),
-    ("s-amlou-03", "أملو باللوز وزيت الزيتون والعسل",                   "amlou", 99,  189, None, 0, 0),
-
-    ("s-miels-01", "عسل السدر",             "miels", 350, None, config.P + "prod1.jpg", 0, 0),
-    ("s-miels-02", "عسل الأكالبتوس الحر",   "miels", 350, None, config.P + "prod2.jpg", 0, 1),
-    ("s-miels-03", "عسل الزعتر الحر",       "miels", 350, None, config.P + "prod3.jpg", 0, 0),
-    ("s-miels-04", "عسل الخروب الحر",       "miels", 350, None, config.P + "prod4.jpg", 0, 0),
-    ("s-miels-05", "عسل الزكوم الحر",       "miels", 350, None, config.P + "prod5.jpg", 0, 0),
-
-    ("s-huiles-01", "زيت أركان للتجميل",   "huiles", 75,  None, None, 0, 0),
-    ("s-huiles-02", "زيت أركان للأكل",     "huiles", 250, None, None, 0, 0),
-    ("s-huiles-03", "زيت الزيتون",         "huiles", 140, None, None, 0, 0),
-    ("s-huiles-04", "زيت الخروع",          "huiles", 80,  None, None, 0, 0),
-    ("s-huiles-05", "زيت اللوز الحلو",     "huiles", 25,  None, None, 0, 0),
-    ("s-huiles-06", "زيت اللوز المر",      "huiles", 25,  None, None, 0, 0),
-    ("s-huiles-07", "زيت الأزير",          "huiles", 50,  None, None, 0, 0),
-    ("s-huiles-08", "زيت السمسم",          "huiles", 35,  None, None, 0, 0),
-    ("s-huiles-09", "زيت القنب الهندي",    "huiles", 65,  None, None, 0, 0),
-
-    ("s-cosm-01", "صابونة الأركان",      "cosmetiques", 50, None, None, 0, 0),
-    ("s-cosm-02", "كريم الشيا",          "cosmetiques", 50, None, None, 0, 0),
-    ("s-cosm-03", "غاسول بالورد",        "cosmetiques", 60, None, None, 0, 0),
-    ("s-cosm-04", "ماسك الطين الأخضر",   "cosmetiques", 35, None, None, 0, 0),
-    ("s-cosm-05", "تونر ماء الورد",      "cosmetiques", 45, None, None, 0, 0),
-    ("s-cosm-06", "سكراب الشفاه بالعسل", "cosmetiques", 28, 35,  None, 0, 0),
-
-    ("s-autr-01", "سلو رويال",            "autres", 100, 150, None, 0, 0),
-    ("s-autr-02", "الجيسينك بودرة",       "autres", None, None, None, 0, 0),
-    ("s-autr-03", "العكبر الخام",         "autres", None, None, None, 0, 0),
-    ("s-autr-04", "حبوب اللقاح",          "autres", None, None, None, 0, 0),
-    ("s-autr-05", "خل التفاح",            "autres", 35,  None, None, 0, 0),
-    ("s-autr-06", "الجيسينغ شرائح",       "autres", 140, None, None, 0, 0),
-    ("s-autr-07", "العكبر البلدي بودرة",  "autres", 70,  None, None, 0, 0),
-    ("s-autr-08", "ليبطون",               "autres", 35,  None, None, 0, 0),
-
-    ("s-reci-01", "وجبة الطاقة",          "recettes", 220, 749, None, 1, 1),
-    ("s-reci-02", "وصفة الجهاز الهضمي",   "recettes", 100, 360, None, 0, 0),
-    ("s-reci-03", "الوصفة المقوية",       "recettes", 99,  580, None, 0, 0),
-    ("s-reci-04", "الوصفة الملكية 👑",     "recettes", 99,  590, None, 1, 0),
-
-    ("s-pack-01", "باقة رمضان",              "packs", 449, 689, None, 1, 1),
+    ("s-amlou-01", "أملو بالكاوكاو وزيت الزيتون والعسل", "amlou", 95, None, None, 0, 0),
+    ("s-amlou-02", "أملو باللوز وزيت أركان والعسل الحر", "amlou", 109, 239, None, 1, 1),
+    ("s-amlou-03", "أملو باللوز وزيت الزيتون والعسل", "amlou", 99, 189, None, 0, 0),
+    ("s-miels-01", "عسل السدر", "miels", 350, None, config.P + "prod1.jpg", 0, 0),
+    ("s-miels-02", "عسل الأكالبتوس الحر", "miels", 350, None, config.P + "prod2.jpg", 0, 1),
+    ("s-miels-03", "عسل الزعتر الحر", "miels", 350, None, config.P + "prod3.jpg", 0, 0),
+    ("s-miels-04", "عسل الخروب الحر", "miels", 350, None, config.P + "prod4.jpg", 0, 0),
+    ("s-miels-05", "عسل الزكوم الحر", "miels", 350, None, config.P + "prod5.jpg", 0, 0),
+    ("s-huiles-01", "زيت أركان للتجميل", "huiles", 75, None, None, 0, 0),
+    ("s-huiles-02", "زيت أركان للأكل", "huiles", 250, None, None, 0, 0),
+    ("s-huiles-03", "زيت الزيتون", "huiles", 140, None, None, 0, 0),
+    ("s-huiles-04", "زيت الخروع", "huiles", 80, None, None, 0, 0),
+    ("s-huiles-05", "زيت اللوز الحلو", "huiles", 25, None, None, 0, 0),
+    ("s-huiles-06", "زيت اللوز المر", "huiles", 25, None, None, 0, 0),
+    ("s-huiles-07", "زيت الأزير", "huiles", 50, None, None, 0, 0),
+    ("s-huiles-08", "زيت السمسم", "huiles", 35, None, None, 0, 0),
+    ("s-huiles-09", "زيت القنب الهندي", "huiles", 65, None, None, 0, 0),
+    ("s-cosm-01", "صابونة الأركان", "cosmetiques", 50, None, None, 0, 0),
+    ("s-cosm-02", "كريم الشيا", "cosmetiques", 50, None, None, 0, 0),
+    ("s-cosm-03", "غاسول بالورد", "cosmetiques", 60, None, None, 0, 0),
+    ("s-cosm-04", "ماسك الطين الأخضر", "cosmetiques", 35, None, None, 0, 0),
+    ("s-cosm-05", "تونر ماء الورد", "cosmetiques", 45, None, None, 0, 0),
+    ("s-cosm-06", "سكراب الشفاه بالعسل", "cosmetiques", 28, 35, None, 0, 0),
+    ("s-autr-01", "سلو رويال", "autres", 100, 150, None, 0, 0),
+    ("s-autr-02", "الجيسينك بودرة", "autres", None, None, None, 0, 0),
+    ("s-autr-03", "العكبر الخام", "autres", None, None, None, 0, 0),
+    ("s-autr-04", "حبوب اللقاح", "autres", None, None, None, 0, 0),
+    ("s-autr-05", "خل التفاح", "autres", 35, None, None, 0, 0),
+    ("s-autr-06", "الجيسينغ شرائح", "autres", 140, None, None, 0, 0),
+    ("s-autr-07", "العكبر البلدي بودرة", "autres", 70, None, None, 0, 0),
+    ("s-autr-08", "ليبطون", "autres", 35, None, None, 0, 0),
+    ("s-reci-01", "وجبة الطاقة", "recettes", 220, 749, None, 1, 1),
+    ("s-reci-02", "وصفة الجهاز الهضمي", "recettes", 100, 360, None, 0, 0),
+    ("s-reci-03", "الوصفة المقوية", "recettes", 99, 580, None, 0, 0),
+    ("s-reci-04", "الوصفة الملكية 👑", "recettes", 99, 590, None, 1, 0),
+    ("s-pack-01", "باقة رمضان", "packs", 449, 689, None, 1, 1),
     ("s-pack-02", "باقة عيد الأضحى المبارك", "packs", 590, None, None, 0, 0),
-
-    ("s-thes-01", "علي المقام",    "thes", None, None, None, 0, 0),
-    ("s-thes-02", "كشمير",         "thes", None, None, None, 0, 0),
-    ("s-thes-03", "جبل علي",       "thes", 80,  None, None, 0, 0),
-    ("s-thes-04", "شاي الحاكم",    "thes", 105, None, None, 0, 0),
+    ("s-thes-01", "علي المقام", "thes", None, None, None, 0, 0),
+    ("s-thes-02", "كشمير", "thes", None, None, None, 0, 0),
+    ("s-thes-03", "جبل علي", "thes", 80, None, None, 0, 0),
+    ("s-thes-04", "شاي الحاكم", "thes", 105, None, None, 0, 0),
     ("s-thes-05", "المقام الذهبي", "thes", 105, None, None, 0, 0),
 ]
 
@@ -99,7 +92,8 @@ CREATE TABLE IF NOT EXISTS products(
     ribbon INTEGER DEFAULT 0,
     featured INTEGER DEFAULT 0,
     custom INTEGER DEFAULT 0,
-    created TEXT
+    created TEXT,
+    sizes TEXT
 );
 CREATE TABLE IF NOT EXISTS orders(
     id TEXT PRIMARY KEY,
@@ -114,7 +108,8 @@ CREATE TABLE IF NOT EXISTS order_items(
     cat TEXT,
     price REAL,
     qty INTEGER,
-    created TEXT
+    created TEXT,
+    size TEXT
 );
 CREATE TABLE IF NOT EXISTS old_products(
     id TEXT PRIMARY KEY,
@@ -127,7 +122,8 @@ CREATE TABLE IF NOT EXISTS old_products(
     custom INTEGER DEFAULT 0,
     created TEXT,
     revoked_at TEXT,
-    revoked_by TEXT
+    revoked_by TEXT,
+    sizes TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_old_products_original ON old_products(original_id);
 CREATE TABLE IF NOT EXISTS password_resets(
@@ -174,7 +170,14 @@ def set_meta(conn, key, value):
 
 
 def unique_id(prefix):
-    return "%s%d%s" % (prefix, int(time.time() * 1000), secrets.token_hex(3))
+    return f"{prefix}{int(time.time() * 1000)}{secrets.token_hex(3)}"
+
+
+def _ensure_column(conn, table, column, decl):
+    """Add a column to an existing table when missing (SQLite has no IF NOT EXISTS)."""
+    existing = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})").fetchall()}
+    if column not in existing:
+        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
 
 
 def init_db():
@@ -184,11 +187,15 @@ def init_db():
     legacy = os.path.join(config.BASE, "dhenbio.db")
     if not os.path.exists(config.DB_FILE) and os.path.exists(legacy):
         os.replace(legacy, config.DB_FILE)
-        print("[db] migrated legacy database -> %s" % config.DB_FILE)
+        print(f"[db] migrated legacy database -> {config.DB_FILE}")
 
     with _lock:
         with db() as conn:
             conn.executescript(SCHEMA)
+            # migrations for databases created before size variants existed
+            _ensure_column(conn, "products", "sizes", "TEXT")
+            _ensure_column(conn, "old_products", "sizes", "TEXT")
+            _ensure_column(conn, "order_items", "size", "TEXT")
 
             seeded = get_meta(conn, "seeded")
             if not seeded:
@@ -202,11 +209,15 @@ def init_db():
                     "INSERT OR REPLACE INTO products"
                     " (id,name,cat,min,max,img,ribbon,featured,custom,created)"
                     " VALUES(?,?,?,?,?,?,?,?,0,?)",
-                    [(p[0], p[1], p[2], p[3], p[4], p[5] or CAT_IMG[p[2]], p[6], p[7], now)
-                     for p in SEED_PRODUCTS],
+                    [
+                        (p[0], p[1], p[2], p[3], p[4], p[5] or CAT_IMG[p[2]], p[6], p[7], now)
+                        for p in SEED_PRODUCTS
+                    ],
                 )
                 set_meta(conn, "seeded", "1")
-                print("[db] seeded reference catalog (8 categories, %d products)" % len(SEED_PRODUCTS))
+                print(
+                    f"[db] seeded reference catalog (8 categories, {len(SEED_PRODUCTS)} products)"
+                )
 
             # keep previously-seeded databases in sync with the brand
             for slug, ar, fr, en in CATEGORY_NAME_UPDATES:
@@ -227,15 +238,21 @@ def init_admin(conn):
         # password using the current, slow hashing scheme.
         _reset_admin_password(conn, "hachage de mot de passe stabilisé")
     if not has_user:
-        print("[auth] nouveau compte admin : %s / %s (variable FIHI_ADMIN_* pour changer)"
-              % (config.DEFAULT_ADMIN_USER, config.DEFAULT_ADMIN_PASS))
+        print(
+            f"[auth] nouveau compte admin : {config.DEFAULT_ADMIN_USER} / "
+            f"{config.DEFAULT_ADMIN_PASS} (variable FIHI_ADMIN_* pour changer)"
+        )
         _reset_admin_password(conn, "compte initial")
-    conn.execute("INSERT OR REPLACE INTO meta(key,value) VALUES('mfa_enabled',?)",
-                 (get_meta(conn, "mfa_enabled") or "0",))
+    conn.execute(
+        "INSERT OR REPLACE INTO meta(key,value) VALUES('mfa_enabled',?)",
+        (get_meta(conn, "mfa_enabled") or "0",),
+    )
     if not get_meta(conn, "admin_email"):
         set_meta(conn, "admin_email", config.DEFAULT_ADMIN_EMAIL)
-        print("[auth] e-mail admin : %s (variable FIHI_ADMIN_EMAIL pour changer)"
-              % config.DEFAULT_ADMIN_EMAIL)
+        print(
+            f"[auth] e-mail admin : {config.DEFAULT_ADMIN_EMAIL} "
+            f"(variable FIHI_ADMIN_EMAIL pour changer)"
+        )
 
 
 def get_reset_email(conn):
@@ -252,8 +269,7 @@ def create_reset_record(conn, email):
         "DELETE FROM password_resets WHERE used=0",  # one pending reset at a time
     )
     conn.execute(
-        "INSERT INTO password_resets(token_hash,email,created,expires,used)"
-        " VALUES(?,?,?,?,0)",
+        "INSERT INTO password_resets(token_hash,email,created,expires,used)" " VALUES(?,?,?,?,0)",
         (token_hash, email, now_ts, now_ts + config.RESET_TOKEN_TTL_MS // 1000),
     )
     return token
@@ -265,8 +281,7 @@ def consume_reset_token(conn, token):
         return None
     token_hash = hash_token(token)
     row = conn.execute(
-        "SELECT id,email,expires FROM password_resets"
-        " WHERE token_hash=? AND used=0",
+        "SELECT id,email,expires FROM password_resets" " WHERE token_hash=? AND used=0",
         (token_hash,),
     ).fetchone()
     if not row:
@@ -281,13 +296,14 @@ def consume_reset_token(conn, token):
 def _reset_admin_password(conn, reason):
     pw = config.DEFAULT_ADMIN_PASS
     if len(pw) < config.MIN_PASSWORD_LEN:
-        raise SystemExit("FIHI_ADMIN_PASSWORD must be at least %d characters"
-                         % config.MIN_PASSWORD_LEN)
+        raise SystemExit(
+            f"FIHI_ADMIN_PASSWORD must be at least {config.MIN_PASSWORD_LEN} characters"
+        )
     salt = secrets.token_hex(8)
     set_meta(conn, "admin_user", config.DEFAULT_ADMIN_USER)
     set_meta(conn, "admin_pw_salt", salt)
     set_meta(conn, "admin_pw_hash", hash_password(pw, salt))
-    print("[auth] identifiants admin réinitialisés (%s)" % reason)
+    print(f"[auth] identifiants admin réinitialisés ({reason})")
 
 
 def set_admin_password(conn, password):
@@ -301,8 +317,7 @@ def verify_admin_password(conn, username, password):
     stored_user = get_meta(conn, "admin_user", "")
     stored_hash = get_meta(conn, "admin_pw_hash", "")
     salt = get_meta(conn, "admin_pw_salt", "")
-    return (username == stored_user and
-            verify_password(password, salt, stored_hash))
+    return username == stored_user and verify_password(password, salt, stored_hash)
 
 
 def is_mfa_enabled(conn):

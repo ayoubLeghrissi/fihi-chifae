@@ -71,9 +71,25 @@
     .combo-item.create{color:var(--green-700);font-weight:700;border-top:1px solid var(--line)}
     .combo-empty{padding:.8rem;text-align:center;color:var(--muted);font-size:.85rem}
 
-    .btn-submit{height:3rem;border-radius:999px;background:var(--green-600);color:#fff;font-weight:800;font-size:.98rem;
+.btn-submit{height:3rem;border-radius:999px;background:var(--green-600);color:#fff;font-weight:800;font-size:.98rem;
       display:inline-flex;align-items:center;justify-content:center;gap:.5rem;transition:background .2s,transform .15s}
     .btn-submit:hover{background:var(--green-800);transform:translateY(-1px)}
+
+    /* ---- sizes (units) editor ---- */
+    .sizes-box{border:1.5px dashed var(--green-200);border-radius:12px;padding:.75rem;background:var(--green-50)}
+    .sizes-list{display:grid;gap:.5rem;margin-bottom:.6rem}
+    .size-row{display:grid;grid-template-columns:1fr 5.5rem 1fr auto;gap:.45rem;align-items:center}
+    .size-row input,.size-row select{height:2.35rem;border:1.5px solid var(--green-200);border-radius:9px;
+      padding:0 .6rem;font-family:inherit;font-size:.86rem;color:var(--ink);background:#fff;width:100%}
+    .size-row input:focus,.size-row select:focus{outline:none;border-color:var(--green-600);box-shadow:0 0 0 3px rgba(22,163,74,.12)}
+    .size-del{width:2.2rem;height:2.2rem;border-radius:9px;color:#B91C1C;display:grid;place-items:center;flex-shrink:0}
+    .size-del:hover{background:#FDE8E8}
+    .btn-add-size{display:inline-flex;align-items:center;gap:.35rem;background:var(--green-100);color:var(--green-800);
+      height:2.2rem;padding:0 .8rem;border-radius:999px;font-weight:700;font-size:.8rem}
+    .btn-add-size:hover{background:var(--green-200)}
+    .sizes-empty{font-size:.78rem;color:var(--muted);padding:.2rem 0 .4rem}
+    .size-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.15rem}
+    .size-tag{background:var(--green-100);color:var(--green-800);font-size:.68rem;font-weight:700;border-radius:999px;padding:.1rem .5rem}
 
     .msg{display:none;padding:.7rem 1rem;border-radius:10px;font-size:.88rem;font-weight:600;margin-top:.8rem}
     .msg.ok{display:block;background:var(--green-100);color:var(--green-800)}
@@ -106,6 +122,10 @@
     .prod-edit .edit-cat-wrap{position:relative}
     .prod-edit .combo-dropdown{position:absolute;left:0;right:0;top:calc(100% + 4px)}
     .prod-edit-actions{display:flex;gap:.5rem;flex-wrap:wrap}
+    .prod-edit .sizes-box{padding:.55rem}
+    .prod-edit .size-row input,.prod-edit .size-row select{height:2.1rem;font-size:.82rem}
+    .prod-edit .size-del{width:1.9rem;height:1.9rem}
+    .prod-edit .btn-add-size{height:1.95rem;font-size:.75rem}
     .btn-save-sm{background:var(--green-600);color:#fff;height:2.3rem;padding:0 1rem;border-radius:999px;font-weight:800;font-size:.84rem}
     .btn-save-sm:hover{background:var(--green-800)}
     .btn-cancel-sm{background:var(--green-100);color:var(--green-800);height:2.3rem;padding:0 1rem;border-radius:999px;font-weight:700;font-size:.84rem}
@@ -157,6 +177,17 @@
           <label for="fName">اسم المنتج</label>
           <input type="text" id="fName" placeholder="مثال: عسل الجبل الخالص" required>
         </div>
+<div class="field full">
+          <label for="sizesEditor">الأحجام والوحدات (اختياري)</label>
+          <div class="sizes-box">
+            <div class="sizes-list" id="sizesList"></div>
+            <button type="button" class="btn-add-size" id="btnAddSize">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+              إضافة حجم
+            </button>
+            <span class="hint" style="display:block;margin-top:.5rem">اتركه فارغاً لتطبيق الأحجام الافتراضية: <b>1 كغ</b> و <b>0.5 كغ</b> (نصف السعر)، وللزيوت <b>1 ل</b> و <b>5 ل</b>. اكتب أي حجم تريده (مثال: 2، 2.5، 10).</span>
+          </div>
+        </div>
         <div class="field full">
           <label for="fFile">صورة المنتج</label>
           <div class="img-row">
@@ -179,6 +210,11 @@
     </section>
 
     <section class="card">
+      <h2>قائمة الفئات</h2>
+      <div id="catList" class="prod-list"><p class="empty">جاري التحميل…</p></div>
+    </section>
+
+    <section class="card">
       <h2>قائمة المنتجات</h2>
       <div id="productList" class="prod-list"><p class="empty">جاري التحميل…</p></div>
     </section>
@@ -188,7 +224,7 @@
   <div class="foot-bar"><a href="admin.html">← العودة إلى لوحة تحكم المبيعات</a></div>
 
   <script src="assets/admin-auth.js?v=4"></script>
-  <script src="assets/admin-add.js?v=7"></script>
+  <script src="assets/admin-add.js?v=8"></script>
 </body>
 </html>
 

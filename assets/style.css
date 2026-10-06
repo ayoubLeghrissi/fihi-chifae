@@ -293,6 +293,10 @@ svg{display:block}
 .prod-body{display:flex;flex-direction:column;gap:.35rem;padding:.9rem 1rem 1rem;flex:1}
 .prod-name{font-size:.92rem;font-weight:700;color:var(--green-950);line-height:1.4;min-height:2.6em}
 .prod-price{font-weight:800;color:var(--green-600);font-size:1.02rem}
+.prod-sizes{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:.45rem}
+.size-chip{padding:.08rem .6rem;border:1.5px solid var(--green-200);border-radius:999px;font-size:.8rem;font-weight:700;background:#fff;color:var(--ink);cursor:pointer;transition:.12s}
+.size-chip:hover{border-color:var(--green-600)}
+.size-chip.selected{background:var(--green-600);color:#fff;border-color:var(--green-600)}
 .prod-price small{font-size:.7rem;font-weight:600;color:var(--muted)}
 .btn-add{
   margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:.45rem;width:100%;

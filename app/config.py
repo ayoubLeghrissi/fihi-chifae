@@ -38,16 +38,21 @@ RESET_TOKEN_TTL_MS = int(os.environ.get("FIHI_RESET_TOKEN_TTL_MIN", "30") or "30
 # ---------------------------------------------------------------------------
 # Security / limits
 # ---------------------------------------------------------------------------
-SESSION_TTL = 8 * 3600                       # admin session lifetime (seconds)
-PASSWORD_ITERATIONS = 210_000                # PBKDF2 work factor
+SESSION_TTL = 8 * 3600  # admin session lifetime (seconds)
+PASSWORD_ITERATIONS = 210_000  # PBKDF2 work factor
 MIN_PASSWORD_LEN = 8
 
-LOGIN_MAX_ATTEMPTS = 5                       # failed logins allowed per window
-LOGIN_WINDOW = 15 * 60                       # rate-limit window (seconds)
+LOGIN_MAX_ATTEMPTS = 5  # failed logins allowed per window
+LOGIN_WINDOW = 15 * 60  # rate-limit window (seconds)
 
-MAX_UPLOAD_BYTES = 8 * 1024 * 1024           # max image payload size
-MAX_JSON_BODY = 16 * 1024 * 1024             # product adds carry a base64 image
-MAX_SMALL_BODY = 64 * 1024                   # login / orders / categories
+MAX_UPLOAD_BYTES = 8 * 1024 * 1024  # max image payload size
+MAX_JSON_BODY = 16 * 1024 * 1024  # product adds carry a base64 image
+MAX_SMALL_BODY = 64 * 1024  # login / orders / categories
 
 MAX_NAME_LEN = 80
 MAX_CATEGORY_NAME_LEN = 60
+
+MAX_SIZES = 12  # max size variants per product
+SIZE_UNITS = ("kg", "L")  # allowed measurement units
+# Categories measured in litres by default (oils); everything else defaults to kg.
+LIQUID_CATEGORIES = ("huiles",)

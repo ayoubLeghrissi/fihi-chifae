@@ -12,6 +12,46 @@
   const DEL_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" stroke-linecap="round"/></svg>';
   const REV_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9.2"/><path d="M8 12h8" stroke-linecap="round"/></svg>';
   const EDIT_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const SIZE_DEL_SVG = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg>';
+
+  const UNITS = [
+    { v: 'kg', ar: 'كغ' },
+    { v: 'L', ar: 'ل' },
+  ];
+
+  // Suggested sizes per category: oils default to litres, everything else to kg.
+  function suggestSizes(cat) {
+    if (cat === 'huiles') {
+      return [{ size: '1', unit: 'L' }, { size: '5', unit: 'L' }];
+    }
+    return [{ size: '1', unit: 'kg' }, { size: '0.5', unit: 'kg' }];
+  }
+
+  function unitOptions(selected) {
+    return UNITS.map((u) =>
+      '<option value="' + u.v + '"' + (u.v === selected ? ' selected' : '') + '>' + u.v + ' (' + u.ar + ')</option>'
+    ).join('');
+  }
+
+  // Build one editable size row. `s` = {size, unit, price}
+  function sizeRowHTML(s) {
+    s = s || {};
+    return (
+      '<div class="size-row" data-size-row>' +
+      '  <input type="text" class="sr-size" value="' + esc(s.size != null ? s.size : '') + '" placeholder="1" inputmode="decimal">' +
+      '  <select class="sr-unit">' + unitOptions(s.unit || 'kg') + '</select>' +
+      '  <input type="number" class="sr-price" value="' + esc(s.price != null ? s.price : '') + '" min="0" step="0.01" placeholder="السعر">' +
+      '  <button type="button" class="size-del" data-del-size title="حذف الحجم">' + SIZE_DEL_SVG + '</button>' +
+      '</div>'
+    );
+  }
+
+  function sizeTagsHTML(sizes) {
+    if (!sizes || !sizes.length) return '';
+    return '<div class="size-tags">' + sizes.map((s) =>
+      '<span class="size-tag">' + esc(s.size) + ' ' + esc(s.unit) + (s.price != null ? ' · ' + fmt(s.price) : '') + '</span>'
+    ).join('') + '</div>';
+  }
 
   let CATS = [];
 
@@ -145,13 +185,31 @@
 
   async function loadList() {
     const box = $('#productList');
+    const catBox = $('#catList');
     let data;
     try {
       data = await loadCatalog();
     } catch (e) {
-      box.innerHTML = '<p class="empty">تعذر تحميل المنتجات.</p>';
+      if (box) box.innerHTML = '<p class="empty">تعذر تحميل المنتجات.</p>';
+      if (catBox) catBox.innerHTML = '<p class="empty">تعذر تحميل الفئات.</p>';
       showMessage(e.message, false);
       return;
+    }
+    // render categories
+    if (catBox) {
+      if (!data.categories || !data.categories.length) {
+        catBox.innerHTML = '<p class="empty">لا توجد فئات.</p>';
+      } else {
+        catBox.innerHTML = data.categories.map((c) =>
+          '<div class="prod-row">' +
+          '  <div class="prod-view">' +
+          '    <img src="' + esc(c.img) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+          '    <div class="info"><b>' + esc(c.title_ar || c.id) + '</b><span>ID: ' + esc(c.id) + '</span></div>' +
+          '  <button class="btn-del" data-action="delete-cat" data-id="' + esc(c.id) + '" title="حذف الفئة">' + DEL_SVG + '</button>' +
+          '  </div>' +
+          '</div>'
+        ).join('');
+      }
     }
     const inp = $('#fCat');
     if (inp && document.activeElement === inp) renderDropdown();
@@ -159,7 +217,7 @@
     const rows = [];
     (data.categories || []).forEach((c) => {
       (c.products || []).forEach((p) => {
-        rows.push({ id: p.id, name: p.name, price: p.min, cat: c.id, img: p.img || c.img, custom: p.custom });
+        rows.push({ id: p.id, name: p.name, price: p.min, cat: c.id, img: p.img || c.img, custom: p.custom, sizes: p.sizes || [] });
       });
     });
     if (!rows.length) { box.innerHTML = '<p class="empty">لا يوجد منتج في القائمة.</p>'; return; }
@@ -168,7 +226,7 @@
       '  <div class="prod-view">' +
       '    <img src="' + esc(p.img) + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
       '    <div class="info"><b>' + esc(p.name) + (p.custom ? ' <span class="badge-custom">خاص</span>' : '') + '</b>' +
-      '      <span>الفئة : ' + esc(catTitle(p.cat)) + '</span></div>' +
+      '      <span>الفئة : ' + esc(catTitle(p.cat)) + '</span>' + sizeTagsHTML(p.sizes) + '</div>' +
       '    <span class="price">' + fmt(Number(p.price) || 0) + ' د.م.</span>' +
       '    <button class="btn-edit" data-action="edit" data-id="' + esc(p.id) + '" title="تعديل" aria-label="تعديل">' + EDIT_SVG + '</button>' +
       (p.custom
@@ -181,6 +239,8 @@
       '      <input type="text" class="edit-name" value="' + esc(p.name) + '" placeholder="اسم المنتج">' +
       '      <input type="number" class="edit-price" value="' + esc(p.price != null ? p.price : '') + '" min="0" step="0.01" placeholder="السعر">' +
       '    </div>' +
+      '    <div class="sizes-box"><div class="sizes-list">' + (p.sizes.length ? p.sizes.map(sizeRowHTML).join('') : sizeRowHTML(null)) + '</div>' +
+      '      <button type="button" class="btn-add-size" data-add-size>إضافة حجم</button></div>' +
       '    <div class="edit-cat-wrap"><input type="text" class="edit-cat" value="' + esc(catTitle(p.cat)) + '" placeholder="الفئة"><div class="combo-dropdown"></div></div>' +
       '    <div class="edit-img-row"><input type="file" class="edit-file" accept="image/png,image/jpeg,image/webp,image/gif"><input type="url" class="edit-url" placeholder="https://.../photo.jpg" value="' + esc(p.img && p.img.startsWith("assets/uploads/") ? "" : p.img) + '" style="height:2.2rem"><span class="hint" style="font-size:.7rem">اترك فارغا للاحتفاظ بالصورة</span></div>' +
       '    <div class="prod-edit-actions"><button class="btn-save-sm" data-save="' + esc(p.id) + '">حفظ</button><button class="btn-cancel-sm" data-cancel="' + esc(p.id) + '">إلغاء</button></div>' +
@@ -188,7 +248,7 @@
       '</div>'
     ).join('');
 
-    Array.from(box.querySelectorAll('[data-action="delete"],[data-action="revoke"]')).forEach((btn) => {
+    Array.from(document.querySelectorAll('#catList [data-action="delete-cat"], [data-action="delete"], [data-action="revoke"]')).forEach((btn) => {
       btn.addEventListener('click', function () { handleAction(btn.dataset.action, btn.dataset.id); });
     });
     Array.from(box.querySelectorAll('[data-action="edit"]')).forEach((btn) => {
@@ -204,9 +264,22 @@
     Array.from(box.querySelectorAll('.prod-row')).forEach((row) => {
       const inpCat = row.querySelector('.edit-cat');
       const dd = row.querySelector('.combo-dropdown');
-      if(!inpCat || !dd) return;
-      inpCat.addEventListener('input', () => renderEditDropdown(inpCat, dd));
-      inpCat.addEventListener('focus', () => renderEditDropdown(inpCat, dd));
+      if(inpCat && dd) {
+        inpCat.addEventListener('input', () => renderEditDropdown(inpCat, dd));
+        inpCat.addEventListener('focus', () => renderEditDropdown(inpCat, dd));
+      }
+      // per-row sizes editor
+      const sList = row.querySelector('.sizes-list');
+      const sBtn = row.querySelector('[data-add-size]');
+      if (sList && sBtn) {
+        sBtn.addEventListener('click', () => addSizeRow(sList, null));
+        Array.from(sList.querySelectorAll('[data-del-size]')).forEach((b) => {
+          b.addEventListener('click', function () {
+            if (sList.children.length > 1) b.closest('[data-size-row]').remove();
+            else { b.closest('[data-size-row]').querySelector('.sr-size').value = ''; b.closest('[data-size-row]').querySelector('.sr-price').value = ''; }
+          });
+        });
+      }
     });
     document.addEventListener('click', function onDocClick(e){
       // close edit dropdowns when clicking outside
@@ -269,6 +342,8 @@
     if(!catInput){ showMessage('يرجى إدخال الفئة.', false); return; }
     let price = null;
     if(priceRaw !== ""){ price = parseFloat(priceRaw); if(isNaN(price)||price<0){ showMessage('يرجى إدخال سعر صحيح.', false); return; } }
+    const sizes = collectSizes(row.querySelector('.sizes-list'));
+    if(!validateSizes(sizes)) return;
     // resolve category slug (auto-create if needed)
     let catSlug;
     try{
@@ -292,6 +367,7 @@
     const payload={};
     payload.name=name; payload.cat=catSlug;
     if(price!==null) payload.price=price; else payload.price="";
+    payload.sizes = sizes;
     if(img!==null) payload.img=img;
     try{
       await api('/api/v1/products/'+encodeURIComponent(id)+'/update', {method:'POST', body: payload});
@@ -301,12 +377,17 @@
   }
 
   async function handleAction(action, id) {
-    const msg = action === 'delete'
+    const msg = action === 'delete-cat'
+      ? 'هل تريد حذف هذه الفئة نهائياً؟ لا يمكن التراجع عن هذا الإجراء.'
+      : action === 'delete'
       ? 'هل تريد حذف هذا المنتج نهائياً؟ لا يمكن التراجع عن هذا الإجراء.'
       : 'هل تريد إزالة هذا المنتج من القائمة؟ سيبقى في الأرشيف.';
     if (!confirm(msg)) return;
     try {
-      if (action === 'delete') {
+      if (action === 'delete-cat') {
+        await api('/api/v1/categories/' + encodeURIComponent(id), { method: 'DELETE' });
+        showMessage('تم حذف الفئة.', true);
+      } else if (action === 'delete') {
         await api('/api/v1/products/' + encodeURIComponent(id), { method: 'DELETE' });
         showMessage('تم حذف المنتج.', true);
       } else {
@@ -317,6 +398,53 @@
     } catch (e) {
       if (e.status !== 401) showMessage(e.message, false);
     }
+  }
+
+  /* ---------- sizes editor ---------- */
+  function addSizeRow(list, s) {
+    const row = document.createElement('div');
+    row.innerHTML = sizeRowHTML(s);
+    const del = row.querySelector('[data-del-size]');
+    if (del) {
+      del.addEventListener('click', function () {
+        if (list.children.length > 1) row.remove();
+        else { row.querySelector('.sr-size').value = ''; row.querySelector('.sr-price').value = ''; }
+      });
+    }
+    list.appendChild(row);
+    return row;
+  }
+
+  function initSizesEditor(list, addBtn) {
+    if (!list) return;
+    addBtn.addEventListener('click', function () { addSizeRow(list, null); });
+    addSizeRow(list, null);
+  }
+
+  // Collect non-empty size rows into the API payload shape.
+  function collectSizes(list) {
+    if (!list) return [];
+    const out = [];
+    Array.from(list.querySelectorAll('[data-size-row]')).forEach((row) => {
+      const size = row.querySelector('.sr-size').value.trim();
+      const unit = row.querySelector('.sr-unit').value;
+      const priceRaw = row.querySelector('.sr-price').value.trim();
+      if (!size && !priceRaw) return; // fully empty row -> ignore
+      out.push({ size: size, unit: unit, price: priceRaw === '' ? null : priceRaw });
+    });
+    return out;
+  }
+
+  // Client-side validation with a friendly message; server re-validates anyway.
+  function validateSizes(sizes) {
+    for (let i = 0; i < sizes.length; i++) {
+      const s = sizes[i];
+      if (!s.size) { showMessage('يرجى إدخال قيمة الحجم.', false); return false; }
+      if (s.price === null || isNaN(parseFloat(s.price)) || parseFloat(s.price) < 0) {
+        showMessage('يرجى إدخال سعر صحيح لكل حجم.', false); return false;
+      }
+    }
+    return true;
   }
 
   function readImage() {
@@ -355,6 +483,8 @@
   function resetForm() {
     const p = $('#imgPreview');
     $('#productForm').reset();
+    const sList = $('#sizesList');
+    if (sList) { sList.innerHTML = ''; addSizeRow(sList, null); }
     p.classList.add('empty');
     p.innerHTML = '';
     closeDropdown();
@@ -372,18 +502,25 @@
   async function submitProduct(e) {
     e.preventDefault();
     const name = $('#fName').value.trim();
-    const price = parseFloat($('#fPrice').value);
+    const priceRaw = $('#fPrice').value.trim();
+    const price = priceRaw === '' ? NaN : parseFloat(priceRaw);
     const catInput = $('#fCat').value.trim();
+    const sizes = collectSizes($('#sizesList'));
     if (!name) { showMessage('يرجى إدخال اسم المنتج.', false); return; }
-    if (isNaN(price) || price < 0) { showMessage('يرجى إدخال سعر صحيح.', false); return; }
     if (!catInput) { showMessage('يرجى إدخال الفئة.', false); return; }
     if (catInput.length < 2) { showMessage('اسم الفئة يجب أن يكون حرفين على الأقل.', false); return; }
+    if (!validateSizes(sizes)) return;
+    // price required only when no explicit sizes are given
+    if (!sizes.length && (isNaN(price) || price < 0)) { showMessage('يرجى إدخال سعر صحيح.', false); return; }
     showMessage('جاري الإضافة…', true);
     const img = await readImage();
     if (img === null) return;
+    const body = { name: name, cat: catInput, img: img, sizes: sizes };
+    if (!isNaN(price) && price >= 0) body.price = price;
     try {
       const catSlug = await ensureCategory(catInput);
-      await api('/api/v1/products', { method: 'POST', body: { name: name, price: price, cat: catSlug, img: img } });
+      body.cat = catSlug;
+      await api('/api/v1/products', { method: 'POST', body: body });
       showMessage('تمت إضافة المنتج بنجاح إلى « ' + catTitle(catSlug) + ' » !', true);
       resetForm();
       loadList();
@@ -392,7 +529,8 @@
         try {
           const fallback = err.payload.id;
           const img2 = img;
-          await api('/api/v1/products', { method: 'POST', body: { name: name, price: price, cat: fallback, img: img2 } });
+          body.cat = fallback;
+          await api('/api/v1/products', { method: 'POST', body: body });
           showMessage('تمت إضافة المنتج بنجاح!', true);
           resetForm();
           loadList();
@@ -407,6 +545,7 @@
     $('#fFile').addEventListener('change', previewImage);
     $('#fUrl').addEventListener('input', previewImage);
     initCategoryCombo();
+    initSizesEditor($('#sizesList'), $('#btnAddSize'));
 
     const lo = $('#btnLogout');
     if (lo) lo.addEventListener('click', function () { AdminAuth.logout(); });

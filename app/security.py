@@ -18,11 +18,13 @@ from .config import PASSWORD_ITERATIONS, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW, SESSI
 # password hashing
 # ---------------------------------------------------------------------------
 
+
 def hash_password(password, salt=None):
     salt = salt or secrets.token_hex(8)
     digest = hashlib.pbkdf2_hmac(
-        "sha256", password.encode("utf-8"), salt.encode("utf-8"), PASSWORD_ITERATIONS)
-    return "pbkdf2$%d$%s$%s" % (PASSWORD_ITERATIONS, salt, digest.hex())
+        "sha256", password.encode("utf-8"), salt.encode("utf-8"), PASSWORD_ITERATIONS
+    )
+    return f"pbkdf2${PASSWORD_ITERATIONS}${salt}${digest.hex()}"
 
 
 def verify_password(password, salt, stored_hash):
@@ -34,7 +36,8 @@ def verify_password(password, salt, stored_hash):
     except (ValueError, AttributeError):
         return False
     digest = hashlib.pbkdf2_hmac(
-        "sha256", password.encode("utf-8"), (salt or salt_s).encode("utf-8"), iterations)
+        "sha256", password.encode("utf-8"), (salt or salt_s).encode("utf-8"), iterations
+    )
     return hmac.compare_digest(digest.hex(), expected)
 
 
@@ -48,6 +51,7 @@ def hash_token(token):
 # ---------------------------------------------------------------------------
 # session store
 # ---------------------------------------------------------------------------
+
 
 class SessionStore:
     """In-memory admin sessions: token -> {exp, created, user, ip}."""
@@ -98,6 +102,7 @@ class SessionStore:
 # ---------------------------------------------------------------------------
 # login throttling (brute-force protection)
 # ---------------------------------------------------------------------------
+
 
 class LoginThrottle:
     def __init__(self, max_attempts=LOGIN_MAX_ATTEMPTS, window=LOGIN_WINDOW):

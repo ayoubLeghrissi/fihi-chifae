@@ -27,7 +27,7 @@
   function waMessage() {
     const tpl = WA_TEMPLATE[LANG] || WA_TEMPLATE.en;
     const lines = cart.length
-      ? cart.map((it) => '• ' + it.qty + ' × ' + it.name + ' (' + money(Number(it.price) || 0) + ')').join('\n') + '\n'
+      ? cart.map((it) => '• ' + it.qty + ' × ' + it.name + (it.size ? ' (' + it.size + ')' : '') + ' (' + money(Number(it.price) || 0) + ')').join('\n') + '\n'
       : '';
     return tpl
       .replace('{LINES}', lines)
@@ -122,6 +122,7 @@
       added_to_cart: 'تمت إضافة « {p} » إلى السلة',
       order_success: 'تم تأكيد طلبيتك بنجاح. شكراً!',
       order_error: 'تعذر إرسال الطلب. يرجى المحاولة مرة أخرى.',
+      choose_size: 'اختر الحجم',
       catalog_offline: 'تعذر تحميل المنتجات. تأكد من تشغيل الخادم (python server.py).',
     },
 
@@ -197,6 +198,8 @@
       added_to_cart: '« {p} » ajouté au panier',
       order_success: 'Commande validée. Merci !',
       order_error: "Impossible d'envoyer la commande. Réessayez.",
+      choose_size: 'Choisir la taille',
+      choose_size: 'Choisir le format',
       catalog_offline: 'Impossible de charger les produits. Assurez-vous que le serveur tourne (python server.py).',
     },
 
@@ -272,6 +275,7 @@
       added_to_cart: '« {p} » added to cart',
       order_success: 'Order confirmed. Thank you!',
       order_error: 'Unable to send the order. Please try again.',
+      choose_size: 'Choose size',
       catalog_offline: 'Unable to load products. Make sure the server is running (python server.py).',
     },
   };
@@ -351,13 +355,49 @@
   }
 
   /* ---------- price ---------- */
+  function validSizes(p) {
+    return (p && p.sizes ? p.sizes : []).filter((s) => s && s.size && (s.unit || 'kg'));
+  }
+  function sizeLabel(s) {
+    const unit = String(s.unit || '');
+    const size = String(s.size || '');
+    if (unit === 'kg') return size + 'kg';
+    if (unit === 'L') return size + 'L';
+    return size + ' ' + unit;
+  }
+  function sizePrices(p) {
+    return validSizes(p)
+      .map((s) => Number(s.price))
+      .filter((v) => !isNaN(v));
+  }
+
   function priceLabel(p) {
+    const sp = sizePrices(p);
+    if (sp.length) {
+      const lo = Math.min.apply(null, sp);
+      const hi = Math.max.apply(null, sp);
+      return lo === hi ? money(lo) : money(lo) + ' - ' + money(hi);
+    }
     if (p.min && p.max) return money(p.min) + ' - ' + money(p.max);
     if (p.min) return money(p.min);
     return t('price_on_request');
   }
 
   function cardHTML(p, img) {
+    const sizes = validSizes(p);
+    let sizeBlock = '';
+    if (sizes.length) {
+      sizeBlock =
+        '<div class="prod-sizes" role="group" aria-label="' + t('choose_size') + '">' +
+        sizes
+          .map(
+            (s) =>
+              '<button type="button" class="size-chip" data-size="' + esc(sizeLabel(s)) +
+              '" data-price="' + esc(s.price) + '">' + esc(sizeLabel(s)) + '</button>'
+          )
+          .join('') +
+        '</div>';
+    }
     return (
       '<article class="prod-card" data-name="' + esc(p.name) + '" data-price="' + (p.min || '') + '" data-cat="' + esc(p.cat || 'autres') + '" data-img="' + esc(img) + '">' +
       '  <div class="prod-media">' +
@@ -368,6 +408,7 @@
       '  <div class="prod-body">' +
       '    <h3 class="prod-name">' + esc(p.name) + '</h3>' +
       '    <span class="prod-price">' + priceLabel(p) + '</span>' +
+      sizeBlock +
       '    <button class="btn-add">' + CARtIcon + ' ' + t('add_to_cart') + '</button>' +
       '  </div>' +
       '</article>'
@@ -377,7 +418,7 @@
   function buildFLAT() {
     const out = [];
     DATA.categories.forEach((cat) => {
-      cat.products.forEach((p) => out.push({ name: p.name, min: p.min, max: p.max, img: p.img || cat.img, cat: cat.id, catTitle: cat['title_' + LANG] || cat.title_ar }));
+      cat.products.forEach((p) => out.push({ name: p.name, min: p.min, max: p.max, sizes: p.sizes, img: p.img || cat.img, cat: cat.id, catTitle: cat['title_' + LANG] || cat.title_ar }));
     });
     return out;
   }
@@ -479,9 +520,9 @@
     if (cartLink) cartLink.title = t('cart_title', cartCount());
   }
 
-  function addToCart(name, price, img, cat, qty) {
-    const existing = cart.find((it) => it.name === name);
-    if (existing) existing.qty += qty; else cart.push({ name: name, price: Number(price) || 0, img: img, cat: cat || 'autres', qty: qty });
+  function addToCart(name, price, img, cat, qty, size) {
+    const existing = cart.find((it) => it.name === name && (it.size || '') === (size || ''));
+    if (existing) existing.qty += qty; else cart.push({ name: name, price: Number(price) || 0, img: img, cat: cat || 'autres', qty: qty, size: size || '' });
     saveCart(); updateBadges(); renderCart();
     toast(t('added_to_cart', name));
   }
@@ -502,7 +543,7 @@
       '<ul class="cart-items">' + cart.map((it, i) =>
         '<li class="cart-item">' +
         '  <img src="' + esc(it.img) + '" alt="' + esc(it.name) + '">' +
-        '  <div class="cart-item-info"><b>' + esc(it.name) + '</b><span>' + money(it.price) + '</span>' +
+        '  <div class="cart-item-info"><b>' + esc(it.name) + (it.size ? ' (' + esc(it.size) + ')' : '') + '</b><span>' + money(it.price) + '</span>' +
         '    <div class="qty">' +
         '      <button data-dec="' + i + '" aria-label="' + t('cart_dec') + '">−</button><em>' + it.qty + '</em><button data-inc="' + i + '" aria-label="' + t('cart_inc') + '">+</button>' +
         '    </div></div>' +
@@ -531,11 +572,40 @@
   }
 
   function bindCartButtons() {
-    $$('.btn-add').forEach((btn) => {
-      btn.addEventListener('click', () => {
+    // delegate globally so featured/best sellers work too
+    document.body.addEventListener('click', (e) => {
+      const chip = e.target.closest('.size-chip');
+      if (chip) {
+        const card = chip.closest('.prod-card');
+        const group = card.querySelector('.prod-sizes');
+        if (group) group.querySelectorAll('.size-chip').forEach((c) => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        const p = parseFloat(chip.dataset.price);
+        if (!isNaN(p)) {
+          const priceEl = card.querySelector('.prod-price');
+          if (priceEl) priceEl.textContent = money(p);
+        }
+        card.dataset.price = isNaN(p) ? '' : String(p);
+        return;
+      }
+      const btn = e.target.closest('.btn-add');
+      if (btn) {
         const card = btn.closest('.prod-card');
-        addToCart(card.dataset.name, card.dataset.price, card.dataset.img, card.dataset.cat, 1);
-      });
+        const name = card.dataset.name;
+        const cat = card.dataset.cat || 'autres';
+        const img = card.dataset.img;
+        const sel = card.querySelector('.size-chip.selected');
+        const hasSizes = !!card.querySelector('.prod-sizes');
+        let price = parseFloat(card.dataset.price) || 0;
+        let size = '';
+        if (hasSizes) {
+          if (!sel) { toast(t('choose_size')); return; }
+          price = parseFloat(sel.dataset.price) || 0;
+          size = sel.dataset.size || '';
+        }
+        addToCart(name, price, img, cat, 1, size || '');
+        toast(t('added_to_cart'));
+      }
     });
     $$('.prod-heart').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -631,7 +701,7 @@
     const buyer = $('#checkoutName').value.trim();
     if (!buyer) { toast(t('name_required')); return; }
     const phone = $('#checkoutPhone').value.trim();
-    const items = cart.map((it) => ({ name: it.name, price: it.price, qty: it.qty, cat: it.cat || 'autres' }));
+    const items = cart.map((it) => ({ name: it.name, price: it.price, qty: it.qty, cat: it.cat || 'autres', size: it.size || '' }));
 
     // Chat via WhatsApp with the order details (name + products + quantities).
     const waHref = 'https://wa.me/' + WHATSAPP_NUMBER + '?text=' + encodeURIComponent(waMessage());

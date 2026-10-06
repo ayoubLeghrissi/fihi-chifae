@@ -17,26 +17,34 @@ def send_password_reset(to_email, reset_link):
     """Send the reset e-mail; returns True when accepted by a mail server."""
     subject = "فيه شفاء — Réinitialisation du mot de passe admin"
     body = (
-        "<div style='font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#1f2937'>"
-        "<h2>Réinitialisation du mot de passe admin</h2>"
-        "<p>Vous avez demandé la réinitialisation du mot de passe de votre espace admin "
-        "<b>fihi-chifae</b>.</p>"
-        "<p>Cliquez sur le bouton ci-dessous : il expire dans "
-        "<b>{ttl_min} minutes</b> et ne peut être utilisé qu'une seule fois.</p>"
-        "<p style='text-align:center'>"
-        "<a href=\"{link}\" style='display:inline-block;background:#16a34a;color:#ffffff;"
-        "padding:12px 26px;border-radius:8px;text-decoration:none;font-weight:bold'>"
-        "Réinitialiser le mot de passe</a></p>"
-        "<p style='font-size:12px;color:#6b7280'>Si le bouton ne s'ouvre pas, copiez ce lien :<br>"
-        "{link}</p>"
-        "<p style='font-size:12px;color:#6b7280'>Si vous n'êtes pas à l'origine de cette demande, "
-        "ignorez cet e-mail.</p></div>"
-    ).replace("{link}", reset_link).replace("{ttl_min}", str(config.RESET_TOKEN_TTL_MS // 60000))
+        (
+            "<div style='font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#1f2937'>"
+            "<h2>Réinitialisation du mot de passe admin</h2>"
+            "<p>Vous avez demandé la réinitialisation du mot de passe de votre espace admin "
+            "<b>fihi-chifae</b>.</p>"
+            "<p>Cliquez sur le bouton ci-dessous : il expire dans "
+            "<b>{ttl_min} minutes</b> et ne peut être utilisé qu'une seule fois.</p>"
+            "<p style='text-align:center'>"
+            '<a href="{link}" style=\'display:inline-block;background:#16a34a;color:#ffffff;'
+            "padding:12px 26px;border-radius:8px;text-decoration:none;font-weight:bold'>"
+            "Réinitialiser le mot de passe</a></p>"
+            "<p style='font-size:12px;color:#6b7280'>Si le bouton ne s'ouvre pas, "
+            "copiez ce lien :<br>"
+            "{link}</p>"
+            "<p style='font-size:12px;color:#6b7280'>Si vous n'êtes pas à l'origine "
+            "de cette demande, ignorez cet e-mail.</p></div>"
+        )
+        .replace("{link}", reset_link)
+        .replace("{ttl_min}", str(config.RESET_TOKEN_TTL_MS // 60000))
+    )
 
     if not (config.SMTP_HOST and config.EMAIL_FROM):
         # Development/on-prem fallback: log the link so the operator can forward it.
-        print("[mail] SMTP non configuré — lien de réinitialisation (à transmettre) :\n  %s"
-              % reset_link, flush=True)
+        print(
+            "[mail] SMTP non configuré — lien de réinitialisation "
+            f"(à transmettre) :\n  {reset_link}",
+            flush=True,
+        )
         return True
 
     to_email = to_email or config.DEFAULT_ADMIN_EMAIL
@@ -60,5 +68,5 @@ def send_password_reset(to_email, reset_link):
                 s.send_message(msg)
         return True
     except Exception as exc:  # pragma: no cover - depends on external servers
-        print("[mail] échec d'envoi vers %s\n  %s" % (to_email, exc))
+        print(f"[mail] échec d'envoi vers {to_email}\n  {exc}")
         return False
