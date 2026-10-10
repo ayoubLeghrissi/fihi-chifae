@@ -40,3 +40,6 @@ install.cmd
 .playwright-mcp/
 test-results/
 playwright-report/
+
+# Performance test output
+perf-results/

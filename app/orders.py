@@ -256,6 +256,8 @@ def create_order(payload, manual=False, source=None):
                 for it in lines
             ],
         )
+    if manual:  # confirmed sales can change the best sellers
+        catalog.bump_catalog_version()
     return {
         "ok": True,
         "order_id": oid,
@@ -278,6 +280,7 @@ def confirm_order(oid):
                 "UPDATE orders SET status='confirmed', confirmed_at=? WHERE id=?",
                 (database.now(), oid),
             )
+    catalog.bump_catalog_version()  # best sellers may change
     return {"ok": True, "order_id": oid, "status": "confirmed"}
 
 

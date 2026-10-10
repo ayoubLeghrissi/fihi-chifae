@@ -15,6 +15,7 @@ Design notes
 
 import argparse
 import email.utils
+import hashlib
 import http.cookies
 import json
 import mimetypes
@@ -35,6 +36,11 @@ _login_throttle = LoginThrottle()
 _reset_throttle = LoginThrottle(max_attempts=3, window=900)
 _order_throttle = LoginThrottle(config.ORDER_MAX_PER_WINDOW, config.ORDER_WINDOW)
 _newsletter_throttle = LoginThrottle(config.NEWSLETTER_MAX_PER_WINDOW, config.NEWSLETTER_WINDOW)
+
+# Pre-encoded public catalog, rebuilt when the catalog version changes (or
+# after CATALOG_CACHE_TTL seconds as a safety net).
+CATALOG_CACHE_TTL = 60
+_catalog_cache = {"version": None, "expires": 0.0, "body": b"", "etag": ""}
 
 _MONTH_RE = re.compile(r"^\d{4}-\d{2}$")
 _EMAIL_RE = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,}$")
@@ -385,14 +391,41 @@ class AppHandler(BaseHTTPRequestHandler):
         self._json(200, {"status": "ok", "service": config.SITE_NAME, "time": time.time()})
 
     def _h_catalog(self, match):
-        data = catalog.grouped_catalog()
-        data["settings"] = {
-            "whatsapp": config.WHATSAPP_NUMBER,
-            "delivery_fee": config.DELIVERY_FEE,
-            "free_delivery_threshold": config.FREE_DELIVERY_THRESHOLD,
-            "free_delivery_cities": [config.FREE_DELIVERY_CITY_LATIN, config.FREE_DELIVERY_CITY_AR],
-        }
-        self._json(200, data)
+        cache = _catalog_cache
+        version = catalog.catalog_version()
+        if cache["version"] != version or time.time() > cache["expires"]:
+            data = catalog.grouped_catalog()
+            data["settings"] = {
+                "whatsapp": config.WHATSAPP_NUMBER,
+                "delivery_fee": config.DELIVERY_FEE,
+                "free_delivery_threshold": config.FREE_DELIVERY_THRESHOLD,
+                "free_delivery_cities": [
+                    config.FREE_DELIVERY_CITY_LATIN,
+                    config.FREE_DELIVERY_CITY_AR,
+                ],
+            }
+            body = json.dumps(data, ensure_ascii=False).encode("utf-8")
+            cache.update(
+                version=version,
+                expires=time.time() + CATALOG_CACHE_TTL,
+                body=body,
+                etag='"' + hashlib.sha256(body).hexdigest()[:32] + '"',
+            )
+        body, etag = cache["body"], cache["etag"]
+        if self.headers.get("If-None-Match") == etag:
+            self.send_response(304)
+            self.send_header("ETag", etag)
+            self.send_header("Cache-Control", "no-cache")
+            self.end_headers()
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")  # always revalidate (cheap 304)
+        self.send_header("ETag", etag)
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _h_create_order(self, match):
         ip = self._client_ip()
@@ -693,6 +726,17 @@ class AppHandler(BaseHTTPRequestHandler):
 QuietHandler = AppHandler
 
 
+class ShopServer(ThreadingHTTPServer):
+    """Threaded server sized for traffic bursts.
+
+    The stdlib default listen backlog is 5: under a burst, extra connections
+    are refused and clients retry after 1 s, 3 s, 7 s... (huge tail latency).
+    """
+
+    request_queue_size = 1024
+    daemon_threads = True
+
+
 # ---------------------------------------------------------------------------
 # entry point
 # ---------------------------------------------------------------------------
@@ -710,8 +754,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     database.init_db()
-    server = ThreadingHTTPServer((args.host, args.port), AppHandler)
-    server.daemon_threads = True
+    server = ShopServer((args.host, args.port), AppHandler)
 
     url = f"http://{args.host}:{args.port}/"
     print("=" * 64)

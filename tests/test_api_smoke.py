@@ -184,3 +184,26 @@ def test_backup_requires_login_and_contains_both_databases(base, admin_cookie):
     assert status == 200 and headers["Content-Type"] == "application/zip"
     names = zipfile.ZipFile(io.BytesIO(body)).namelist()
     assert "fihi-chifae.db" in names and "fihi-chifae-archive.db" in names
+
+
+def test_catalog_cache_is_refreshed_by_admin_changes(base, admin_cookie):
+    status, headers, body = _req(base + "/api/v1/catalog")
+    etag = headers["ETag"]
+    status, _, _ = _req(base + "/api/v1/catalog", headers={"If-None-Match": etag})
+    assert status == 304  # unchanged catalog: no body re-sent
+
+    status, _, body = _req(
+        base + "/api/v1/categories", "POST", {"name": "pytest-cache-cat"}, admin_cookie
+    )
+    slug = json.loads(body)["category"]["slug"]
+    status, _, body = _req(
+        base + "/api/v1/products",
+        "POST",
+        {"name": "pytest-cache-prod", "cat": slug, "price": 12},
+        admin_cookie,
+    )
+    assert status == 201
+    status, headers, body = _req(base + "/api/v1/catalog", headers={"If-None-Match": etag})
+    assert status == 200 and headers["ETag"] != etag  # change visible immediately
+    names = [p["name"] for c in json.loads(body)["categories"] for p in c["products"]]
+    assert "pytest-cache-prod" in names

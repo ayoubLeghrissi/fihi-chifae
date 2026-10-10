@@ -1,8 +1,10 @@
-name: CI/CD — test, secure, build, deploy (manual)
+name: CI/CD — test, secure, build, performance, deploy (manual)
 
 # Every push / PR: lint, tests, security scans and Docker image build.
-# Deployment ONLY happens when you click "Run workflow" (Actions tab) and pick
-# a target. The data lives on the platform volume, so a deploy never touches it.
+# Push to main: + performance (load) test with a downloadable report.
+# "Run workflow" (Actions tab): choose a performance test and/or a deployment.
+# Deployment ONLY happens when you pick a target; the data lives on the
+# platform volume, so a deploy never touches it.
 on:
   push:
     branches: [main, master]
@@ -11,10 +13,30 @@ on:
   workflow_dispatch:
     inputs:
       target:
-        description: "Where to deploy"
+        description: "Deploy to (none = do not deploy)"
         type: choice
-        options: [railway, fly, render]
-        default: railway
+        options: [none, railway, fly, render]
+        default: none
+      run_perf:
+        description: "Run the performance (load) test"
+        type: boolean
+        default: true
+      perf_users:
+        description: "Concurrent users per stage (comma separated)"
+        type: string
+        default: "5,100,1000"
+      perf_duration:
+        description: "Seconds per stage"
+        type: string
+        default: "60"
+      perf_cpus:
+        description: "vCPUs given to the app container"
+        type: string
+        default: "1"
+      perf_memory:
+        description: "RAM limit of the app container"
+        type: string
+        default: "512m"
 
 permissions:
   contents: read
@@ -128,7 +150,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Trivy scan (HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@0.24.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         continue-on-error: true
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
@@ -141,6 +163,42 @@ jobs:
         continue-on-error: true
         with:
           sarif_file: trivy.sarif
+
+  # ───────────────────────────── performance ─────────────────────────────
+  performance:
+    name: Performance (Locust load test)
+    if: >-
+      (github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'))
+      || (github.event_name == 'workflow_dispatch' && inputs.run_perf)
+    needs: [lint-test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+      - name: Install Locust + report tooling
+        run: pip install -r perf/requirements.txt
+      - name: Build the production image
+        run: docker build -t fihi-chifae:perf .
+      - name: Load test (stages of concurrent users) + resource sampling
+        env:
+          PERF_USERS: ${{ inputs.perf_users || '5,100,1000' }}
+          PERF_DURATION: ${{ inputs.perf_duration || '60' }}
+          PERF_CPUS: ${{ inputs.perf_cpus || '1' }}
+          PERF_MEMORY: ${{ inputs.perf_memory || '512m' }}
+          PERF_OUT: perf-results
+        run: bash perf/run.sh
+      - name: Upload report (open report.html)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-report
+          path: perf-results/
+          retention-days: 30
+          if-no-files-found: warn
 
   # ─────────────────────────── manual deployments ───────────────────────────
   deploy-railway:

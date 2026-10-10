@@ -1,6 +1,7 @@
 """Catalog domain logic: products, categories, archive, best sellers and media."""
 
 import base64
+import functools
 import json
 import os
 import re
@@ -20,6 +21,31 @@ class StoreError(Exception):
         self.code = code
         self.message = message
         self.extra = extra
+
+
+# Version of the public catalog. Every write that changes what
+# GET /api/v1/catalog returns bumps it, so the HTTP layer can serve a cached
+# copy in between (the catalog is read on every page view, written rarely).
+_catalog_version = [0]
+
+
+def bump_catalog_version():
+    _catalog_version[0] += 1
+
+
+def catalog_version():
+    return _catalog_version[0]
+
+
+def _changes_catalog(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            bump_catalog_version()
+
+    return wrapper
 
 
 def barcode():
@@ -255,6 +281,7 @@ def category_exists(conn, slug):
     return conn.execute("SELECT 1 FROM categories WHERE slug=?", (slug,)).fetchone() is not None
 
 
+@_changes_catalog
 def create_category(name):
     name = re.sub(r"\s+", " ", (name or "")).strip()
     if not (2 <= len(name) <= config.MAX_CATEGORY_NAME_LEN):
@@ -276,6 +303,7 @@ def create_category(name):
     return category_json(row)
 
 
+@_changes_catalog
 def delete_category(slug, archived_by="admin"):
     """Move an empty category to the archive database."""
     slug = (slug or "").strip()
@@ -330,6 +358,7 @@ def _check_name(name):
     return name
 
 
+@_changes_catalog
 def add_product(name, cat, price, img_source, sizes=None, description=""):
     name = _check_name(name)
     if price is not None and not (0 <= price <= 1_000_000):
@@ -371,6 +400,7 @@ def add_product(name, cat, price, img_source, sizes=None, description=""):
     return product_json(row)
 
 
+@_changes_catalog
 def update_product(
     pid, name=None, cat=None, price=None, img_source=None, sizes=None, description=None
 ):
@@ -442,6 +472,7 @@ def update_product(
     return product_json(updated)
 
 
+@_changes_catalog
 def archive_product(pid, archived_by):
     """Delete a product from the catalog by moving it to the archive database.
 
@@ -507,6 +538,7 @@ def list_archive():
     return {"products": products, "categories": categories}
 
 
+@_changes_catalog
 def restore_product(archive_id):
     """Put an archived product back into the catalog (re-creating its category)."""
     with database.db_lock, database.archive_db() as arch:

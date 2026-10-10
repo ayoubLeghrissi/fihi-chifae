@@ -164,7 +164,7 @@
   let loading = true;
 
   function loadCatalog() {
-    return fetch('/api/v1/catalog', { cache: 'no-store' })
+    return fetch('/api/v1/catalog', { cache: 'no-cache' })
       .then((r) => { if (!r.ok) throw new Error('api'); return r.json(); })
       .then((data) => {
         DATA.categories = data.categories || [];

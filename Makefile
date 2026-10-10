@@ -13,7 +13,7 @@ VERSION       ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 PLATFORMS     ?= linux/amd64,linux/arm64
 
 .DEFAULT_GOAL := help
-.PHONY: help install launch dev test lint format format-check security audit bandit pip-audit clean docker-build docker-run docker-scan push github-init deploy deploy-railway deploy-fly deploy-render backup
+.PHONY: help install launch dev test lint format format-check security audit bandit pip-audit clean docker-build docker-run docker-scan push github-init deploy deploy-railway deploy-fly deploy-render backup perf
 
 help: ## Show this help
 	@echo "fihi-chifae — available targets:"
@@ -58,6 +58,12 @@ pip-audit: ## pip-audit for known CVEs
 	pip-audit --desc 2>/dev/null || echo "pip-audit: no fixable CVEs or audit skipped"
 
 audit: pip-audit
+
+# ── performance ─────────────────────────────────────────────────────────
+perf: ## Load test the Docker image (USERS="5 100 1000" DURATION=60) -> perf-results/report.html
+	$(PIP) install -q -r perf/requirements.txt
+	docker build -t fihi-chifae:perf .
+	PERF_USERS="$${USERS:-5 100 1000}" PERF_DURATION="$${DURATION:-60}" bash perf/run.sh
 
 # ── docker ──────────────────────────────────────────────────────────────
 docker-build: ## Build Docker image (local)

@@ -57,6 +57,18 @@ Other targets in the same dropdown (only if you ever need them): `fly`
 
 From a terminal instead: `railway login && railway link && make deploy`.
 
+## Performance (load) test
+
+Runs automatically after every push to `main`, or on demand: **Actions → CI/CD → Run
+workflow** (target `none`, tick *Run the performance test*, choose users / duration /
+vCPU / RAM). The production image runs in a fresh container per stage (default 1 vCPU,
+512 MB, demo catalog) while Locust simulates shoppers browsing, loading the catalog and
+ordering, plus one admin on the dashboard. Resource usage is sampled every second.
+
+Results: the run page shows a summary table; the **perf-report** artifact contains
+`report.html` (charts: throughput, response times, CPU, RAM per stage) plus the raw Locust
+reports and CSVs. Locally: `make perf` (needs Docker).
+
 ## Backups (free)
 
 Dashboard → **نسخة احتياطية** downloads a zip with a consistent copy of both

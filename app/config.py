@@ -95,9 +95,11 @@ TRUST_PROXY = os.environ.get("FIHI_TRUST_PROXY", "1" if IS_PRODUCTION else "0") 
 
 LOGIN_MAX_ATTEMPTS = 5  # failed logins allowed per window
 LOGIN_WINDOW = 15 * 60  # rate-limit window (seconds)
-ORDER_MAX_PER_WINDOW = 10  # public orders per IP per window
+# Public orders / newsletter sign-ups allowed per client IP per window.
+# Overridable only so load tests (all users share one IP) are not throttled.
+ORDER_MAX_PER_WINDOW = int(os.environ.get("FIHI_ORDER_RATE_LIMIT", "10") or 10)
 ORDER_WINDOW = 10 * 60
-NEWSLETTER_MAX_PER_WINDOW = 5
+NEWSLETTER_MAX_PER_WINDOW = int(os.environ.get("FIHI_NEWSLETTER_RATE_LIMIT", "5") or 5)
 NEWSLETTER_WINDOW = 60 * 60
 
 MAX_UPLOAD_BYTES = 8 * 1024 * 1024  # max image payload size
