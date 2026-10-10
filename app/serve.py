@@ -296,7 +296,7 @@ class AppHandler(BaseHTTPRequestHandler):
             sys.stderr.write(f"[error] {self.command} {self._path}: {exc!r}\n")
             try:
                 self._error(500, "internal_error", "خطأ داخلي في الخادم")
-            except Exception:  # noqa: S110 - response already best-effort
+            except Exception:  # noqa: S110  # nosec B110 - best-effort reply
                 pass
 
     # --------------------------------------------------------------- static
@@ -702,7 +702,7 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="fihi-chifae web shop + SQLite API")
     parser.add_argument(
         "--host",
-        default="0.0.0.0",  # noqa: S104 - intentional LAN / container binding
+        default="0.0.0.0",  # noqa: S104  # nosec B104 - container binding
         help="bind address (0.0.0.0 = reachable from the LAN)",
     )
     parser.add_argument("--port", type=int, default=int(os.environ.get("PORT", "8000")))

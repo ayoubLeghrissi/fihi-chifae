@@ -18,6 +18,7 @@ skips = ["B101", "B601"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]  # import the `app` package with plain `pytest` (as CI runs it)
 python_files = ["test_*.py"]
 addopts = "-q --strict-markers"
 

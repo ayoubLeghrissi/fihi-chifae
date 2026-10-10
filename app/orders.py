@@ -318,7 +318,7 @@ def list_orders(date_from=None, date_to=None):
         args.append(date_to)
     # only constant SQL fragments are concatenated; dates are bound parameters
     where_sql = (" WHERE " + " AND ".join(where)) if where else ""
-    sql = f"SELECT o.*, {ref} AS ref_date FROM orders o{where_sql}"  # noqa: S608
+    sql = f"SELECT o.*, {ref} AS ref_date FROM orders o{where_sql}"  # noqa: S608  # nosec B608
     sql += " ORDER BY (o.status='pending') DESC, ref_date DESC"
     with database.live_db() as conn:
         orders = [dict(r) for r in conn.execute(sql, args)]

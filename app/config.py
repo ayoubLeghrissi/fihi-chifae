@@ -44,7 +44,7 @@ TIMEZONE = os.environ.get("FIHI_TIMEZONE", "Africa/Casablanca")
 # ---------------------------------------------------------------------------
 # Admin credentials (used once, to create the account on a fresh database)
 # ---------------------------------------------------------------------------
-_DEFAULT_PASS = "admin2026"  # noqa: S105 - local dev only; refused when FIHI_ENV=production
+_DEFAULT_PASS = "admin2026"  # noqa: S105  # nosec B105 - dev only, refused in production
 DEFAULT_ADMIN_USER = os.environ.get("FIHI_ADMIN_USER", "admin")
 DEFAULT_ADMIN_PASS = os.environ.get("FIHI_ADMIN_PASSWORD", _DEFAULT_PASS)
 ADMIN_PASSWORD_FROM_ENV = "FIHI_ADMIN_PASSWORD" in os.environ
