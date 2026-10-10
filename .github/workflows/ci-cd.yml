@@ -1,21 +1,27 @@
-name: CI/CD — build, secure, deploy
+name: CI/CD — test, secure, build, deploy (manual)
 
+# Every push / PR: lint, tests, security scans and Docker image build.
+# Deployment ONLY happens when you click "Run workflow" (Actions tab) and pick
+# a target. The data lives on the platform volume, so a deploy never touches it.
 on:
   push:
     branches: [main, master]
   pull_request:
     branches: [main, master]
   workflow_dispatch:
+    inputs:
+      target:
+        description: "Where to deploy"
+        type: choice
+        options: [railway, fly, render]
+        default: railway
 
 permissions:
   contents: read
-  security-events: write
-  packages: write
-  id-token: write
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
 
 env:
   PYTHON_VERSION: "3.12"
@@ -29,80 +35,49 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
           pip install -r requirements-dev.txt
-
       - name: Lint (ruff)
-        run: ruff check app server.py
-
+        run: ruff check app server.py docker-entrypoint.py
       - name: Format check (black)
-        run: black --check app server.py
-
-      - name: Compile check
-        run: python -m compileall app server.py
-
-      - name: Tests + coverage
+        run: black --check app server.py tests
+      - name: Tests + coverage (each test deletes the data it creates)
         run: pytest --cov=app --cov-report=term-missing --cov-report=xml
-
-      - name: Upload coverage
+      - uses: actions/upload-artifact@v4
         if: always()
-        uses: actions/upload-artifact@v4
         with:
           name: coverage-xml
           path: coverage.xml
           if-no-files-found: ignore
 
   security:
-    name: Security
+    name: Security (Bandit + pip-audit)
     runs-on: ubuntu-latest
     permissions:
       contents: read
       security-events: write
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-
-      - name: Install security tools
-        run: |
-          python -m pip install --upgrade pip
-          pip install bandit pip-audit
-
+      - run: pip install bandit pip-audit
       - name: Bandit (SAST)
-        run: bandit -r app -f sarif -o bandit.sarif || bandit -r app --severity-level medium || true
-
-      - name: Upload Bandit SARIF
+        run: bandit -r app -c pyproject.toml -f sarif -o bandit.sarif || true
+      - uses: github/codeql-action/upload-sarif@v3
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
         with:
           sarif_file: bandit.sarif
-          wait-for-processing: true
-        continue-on-error: true
-
-      - name: pip-audit (SCA)
-        run: pip-audit --desc --format=json --output=pip-audit.json 2>&1 | tee pip-audit.log || true
-
-      - name: Upload pip-audit
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: pip-audit
-          path: |
-            pip-audit.json
-            pip-audit.log
-          if-no-files-found: ignore
+      - name: pip-audit (known CVEs in dependencies)
+        run: pip-audit -r requirements.txt --desc
 
   codeql:
     name: CodeQL
@@ -115,59 +90,27 @@ jobs:
       - uses: actions/checkout@v4
       - uses: github/codeql-action/init@v3
         with:
-          languages: python
+          languages: python, javascript
           queries: security-and-quality
-      - uses: github/codeql-action/autobuild@v3
       - uses: github/codeql-action/analyze@v3
-        with:
-          category: "/language:python"
 
   build:
-    name: Build (binary + Docker)
+    name: Docker image
     runs-on: ubuntu-latest
     needs: [lint-test, security]
     permissions:
       contents: read
       packages: write
-    outputs:
-      image: ${{ steps.meta.outputs.tags }}
-      digest: ${{ steps.build.outputs.digest }}
+      security-events: write
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: pip
-
-      - name: Install build deps
-        run: |
-          pip install -r requirements.txt
-          pip install -r requirements-dev.txt
-
-      - name: Build zipapp binary
-        run: |
-          make binary
-          ls -lh dist/
-          python dist/fihi-chifae.pyz --help || true
-
-      - name: Upload binary artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: fihi-chifae-binary
-          path: dist/
-          if-no-files-found: error
-
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
-
       - uses: docker/login-action@v3
         if: github.event_name != 'pull_request'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
       - uses: docker/metadata-action@v5
         id: meta
         with:
@@ -175,66 +118,88 @@ jobs:
           tags: |
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=tag
-
       - uses: docker/build-push-action@v6
-        id: build
         with:
           context: .
-          file: ./Dockerfile
-          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
+          load: ${{ github.event_name == 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          provenance: true
-          sbom: true
-
       - name: Trivy scan (HIGH/CRITICAL)
         uses: aquasecurity/trivy-action@0.24.0
+        continue-on-error: true
         with:
           image-ref: ${{ fromJSON(steps.meta.outputs.json).tags[0] }}
           format: sarif
           output: trivy.sarif
           severity: HIGH,CRITICAL
           ignore-unfixed: true
-        continue-on-error: true
-
-      - name: Upload Trivy SARIF
+      - uses: github/codeql-action/upload-sarif@v3
         if: always()
-        uses: github/codeql-action/upload-sarif@v3
+        continue-on-error: true
         with:
           sarif_file: trivy.sarif
-        continue-on-error: true
 
-  deploy:
-    name: Deploy to Fly.io
+  # ─────────────────────────── manual deployments ───────────────────────────
+  deploy-railway:
+    name: Deploy → Railway
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'railway'
+    needs: [lint-test, security]
     runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    environment:
-      name: production
-      url: https://fihi-chifae.fly.dev
-    permissions:
-      contents: read
-      packages: read
+    environment: production
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Deploy with the Railway CLI (volume /data is kept)
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_SERVICE }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ] || [ -z "$RAILWAY_SERVICE" ]; then
+            echo "::error::Set the RAILWAY_TOKEN secret and the RAILWAY_SERVICE variable (see deployment-guide.md)"
+            exit 1
+          fi
+          npm install -g @railway/cli
+          railway up --service "$RAILWAY_SERVICE" --ci
+      - name: Smoke test
+        if: vars.PUBLIC_URL != ''
+        run: |
+          for i in $(seq 1 30); do
+            curl -fsS "${{ vars.PUBLIC_URL }}/api/v1/ping" && exit 0
+            sleep 10
+          done
+          exit 1
 
+  deploy-fly:
+    name: Deploy → Fly.io
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'fly'
+    needs: [lint-test, security]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
-
-      - name: Deploy (blue-green, healthcheck on /api/v1/ping)
+      - name: Deploy (volume fihi_data is kept)
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
         run: |
-          if [ -z "$FLY_API_TOKEN" ]; then
-            echo "::notice::FLY_API_TOKEN not set — skipping deploy (build artifact is ready in GHCR)"
-            exit 0
-          fi
-          flyctl deploy --remote-only --ha=false --strategy rolling
+          if [ -z "$FLY_API_TOKEN" ]; then echo "::error::Set the FLY_API_TOKEN secret"; exit 1; fi
+          flyctl deploy --remote-only --ha=false
 
-      # ── Alternative cloud targets (uncomment as needed) ──
-      # - Render: set RENDER_DEPLOY_HOOK secret and uncomment:
-      #   curl -X POST "$RENDER_DEPLOY_HOOK"
-      # - Cloud Run: uses gcloud + `gcloud run deploy fihi-chifae --image ghcr.io/...`
+  deploy-render:
+    name: Deploy → Render
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'render'
+    needs: [lint-test, security]
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Trigger the Render deploy hook (disk /data is kept)
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$RENDER_DEPLOY_HOOK" ]; then echo "::error::Set the RENDER_DEPLOY_HOOK secret"; exit 1; fi
+          curl -fsS -X POST "$RENDER_DEPLOY_HOOK"

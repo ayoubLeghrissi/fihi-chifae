@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>تسجيل الدخول · فيه شفاء</title>
+  <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/admin-auth.css?v=6">
+</head>
+<body class="auth-page">
+  <main class="auth-card">
+    <div class="auth-brand"><img src="assets/logo.jpg" alt="شعار فيه شفاء"><span>فيه <b>شفاء</b></span></div>
+    <h1>تسجيل الدخول</h1>
+    <p class="auth-intro">مساحة آمنة — يرجى تسجيل الدخول للمتابعة.</p>
+
+    <form id="loginForm" class="auth-form" novalidate>
+      <div class="auth-field">
+        <label for="authUser">اسم المستخدم</label>
+        <input id="authUser" type="text" autocomplete="username" required placeholder="اسم المستخدم">
+      </div>
+      <div class="auth-field">
+        <label for="authPass">كلمة المرور</label>
+        <input id="authPass" type="password" autocomplete="current-password" required placeholder="كلمة المرور">
+      </div>
+      <button type="submit" class="btn-login">تسجيل الدخول</button>
+      <p class="auth-error" id="loginMsg" role="alert"></p>
+      <p class="auth-links"><button type="button" id="forgotLink">نسيت كلمة المرور؟</button></p>
+    </form>
+
+    <form id="resetForm" class="auth-form" novalidate hidden>
+      <div class="auth-field">
+        <label for="resetEmail">البريد الإلكتروني</label>
+        <input id="resetEmail" type="email" autocomplete="email" required placeholder="you@example.com">
+      </div>
+      <button type="submit" class="btn-login">إرسال رابط الاستعادة</button>
+      <p class="auth-error" id="resetMsg" role="alert"></p>
+      <p class="auth-links"><button type="button" id="backLoginLink">العودة لتسجيل الدخول</button></p>
+    </form>
+
+    <p class="auth-links"><a href="/">← العودة إلى المتجر</a></p>
+  </main>
+  <script src="assets/admin-login.js?v=1"></script>
+</body>
+</html>

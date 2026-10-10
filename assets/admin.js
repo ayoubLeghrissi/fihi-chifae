@@ -1,281 +1,428 @@
-/* فيه شفاء - لوحة التحكم: مؤشرات، رسوم، تصدير Excel، الطلبات مجمعة حسب الزبون */
+/* فيه شفاء - لوحة التحكم: مؤشرات، رسوم بيانية، تصدير Excel، تأكيد/رفض الطلبات، طلب يدوي */
 (function () {
   'use strict';
 
-  const $ = (s) => document.querySelector(s);
+  const $ = (s, c) => (c || document).querySelector(s);
+  const $$ = (s, c) => Array.from((c || document).querySelectorAll(s));
+  const { apiJson, toast, esc, mad } = window.AdminAuth;
   const GREEN = ['#16A34A', '#4AAA6F', '#7EC79B', '#0E5E2D', '#229D4E', '#B8E0C8', '#12843D', '#0B4523'];
+
   let charts = [];
-  let allLatest = [];
+  let catNames = {};
+  let orders = [];
+  let statusFilter = 'all';
+  let catalog = { categories: [], products: [] };
 
-  function mad(n) {
-    return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' د.م.';
-  }
-
-  function monthsBack(k) {
-    const out = [];
+  /* ---------------- helpers ---------------- */
+  const pad = (n) => String(n).padStart(2, '0');
+  function today() { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function currentMonthBounds() {
     const d = new Date();
-    for (let i = 0; i < k; i++) {
-      const dt = new Date(d.getFullYear(), d.getMonth() - i, 1);
-      out.push(dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0'));
-    }
-    return out.reverse();
+    const y = d.getFullYear(), m = d.getMonth();
+    return { from: y + '-' + pad(m + 1) + '-01', to: y + '-' + pad(m + 1) + '-' + pad(new Date(y, m + 1, 0).getDate()) };
+  }
+  function monthLabel(ym) {
+    const [y, m] = String(ym).split('-').map(Number);
+    if (!y || !m) return ym;
+    return new Date(y, m - 1, 1).toLocaleDateString('ar-MA', { month: 'long', year: 'numeric' });
+  }
+  function fmtDate(ts) { return String(ts || '').slice(0, 16).replace('T', ' '); }
+  const catLabel = (slug) => catNames[slug] || slug || '—';
+  function waNumber(phone) {
+    let d = String(phone || '').replace(/\D/g, '');
+    if (d.startsWith('00')) d = d.slice(2);
+    if (d.startsWith('0')) d = '212' + d.slice(1);
+    return d.length >= 9 ? d : '';
+  }
+  function safeUrl(u) { return /^https?:\/\//i.test(String(u || '')) ? String(u) : ''; }
+
+  function whenChart(cb) {
+    if (window.Chart) return cb();
+    window.addEventListener('load', function () { if (window.Chart) cb(); });
   }
 
-  function fillMonthSelector(revenueByMonth) {
-    const sel = $('#monthSel');
-    const known = (revenueByMonth || []).map((r) => r.ym);
-    const all = new Set([...monthsBack(6), ...known]);
-    const ordered = [...all].sort();
-    sel.innerHTML = '';
-    ordered.forEach((ym) => {
-      const opt = document.createElement('option');
-      opt.value = ym;
-      opt.textContent = ym;
-      sel.appendChild(opt);
-    });
-    const now = new Date();
-    const cur = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
-    if ([...all].includes(cur)) sel.value = cur;
-  }
-
-  async function load() {
+  /* ---------------- summary + charts ---------------- */
+  async function loadSummary() {
     let data;
     try {
-      const res = await AdminAuth.api('/api/v1/sales/summary', { cache: 'no-store' });
-      if (!res.ok) throw new Error('api');
-      data = await res.json();
+      data = await apiJson('/api/v1/sales/summary');
     } catch (e) {
-      if (e.status === 401) return;
-      $('#kRevenue').textContent = '—';
-      ['chartRevenue', 'chartTop', 'chartCat'].forEach((id) => chartEmpty(id, 'تعذر الاتصال بالخادم'));
-      $('#ordersTable').innerHTML = '<div class="empty-chart">تعذر الاتصال بالخادم.</div>';
+      if (e.status !== 401) toast('تعذر تحميل المؤشرات: ' + e.message, 'error');
       return;
     }
+    catNames = data.categoryNames || {};
+    const t = data.totals || {}, m = data.month || {}, p = data.pending || {};
+    $('#kRevenue').textContent = mad(t.revenue);
+    $('#kRevenueSub').textContent = t.orders + ' طلب مؤكد · منها توصيل ' + mad(t.delivery);
+    $('#kMonthRevenue').textContent = mad(m.revenue);
+    $('#kMonthSub').textContent = m.orders + ' طلب · ' + m.units + ' وحدة (' + monthLabel(m.label) + ')';
+    $('#kPending').textContent = String(p.orders || 0);
+    $('#kPendingSub').textContent = p.orders ? 'بقيمة ' + mad(p.amount) + ' — غير محتسبة في الإيرادات' : 'لا توجد طلبات معلقة';
+    $('#kPendingCard').classList.toggle('attention', !!p.orders);
+    $('#kUnits').textContent = String(t.units || 0);
+    $('#kUnitsSub').textContent = m.units + ' هذا الشهر · ' + (data.subscribers || 0) + ' مشترك في النشرة';
 
-    const totals = data.totals || {};
-    const month = data.month || {};
-    const byMonth = data.revenueByMonth || [];
-    const top = data.topSellers || [];
-    const byCat = data.byCategory || [];
-
-    $('#kRevenue').textContent = mad(totals.revenue);
-    $('#kOrders').textContent = totals.orders;
-    $('#kUnits').textContent = totals.units;
-    $('#kMonthRevenue').textContent = mad(month.revenue);
-    $('#kMonthSub').textContent = month.orders + ' طلب · ' + month.units + ' وحدة (' + month.label + ')';
-    $('#kOrdersSub').textContent = month.orders + ' هذا الشهر';
-    $('#kUnitsSub').textContent = totals.units + ' الإجمالي';
-
-    fillMonthSelector(byMonth);
-    renderCharts(byMonth, top, byCat);
-    allLatest = data.latest || [];
-    initOrdersFilters();
-    renderOrdersFiltered();
+    fillMonthSelector(data.months || [], (data.revenueByMonth || []).map((r) => r.ym));
+    whenChart(() => renderCharts(data.revenueByMonth || [], data.topSellers || [], data.byCategory || []));
   }
 
-  function chartEmpty(id, msg) {
-    const el = document.getElementById(id);
-    if (el) { el.closest('.chart-box').innerHTML = '<div class="empty-chart">' + msg + '</div>'; }
+  function fillMonthSelector(withSales, recent) {
+    const sel = $('#monthSel');
+    const prev = sel.value;
+    const all = Array.from(new Set([...recent, ...withSales])).sort().reverse();
+    sel.innerHTML = '<option value="">كل الأشهر</option>' +
+      all.map((ym) => '<option value="' + esc(ym) + '">' + esc(monthLabel(ym)) + '</option>').join('');
+    const cur = today().slice(0, 7);
+    sel.value = prev && all.includes(prev) ? prev : (all.includes(cur) ? cur : '');
+  }
+
+  function chartBox(id) {
+    let canvas = document.getElementById(id);
+    const box = canvas ? canvas.closest('.chart-box') : null;
+    return { canvas, box };
   }
 
   function renderCharts(byMonth, top, byCat) {
     charts.forEach((c) => c.destroy());
     charts = [];
-
-    const labels = byMonth.map((r) => r.ym);
-    const revenue = byMonth.map((r) => r.revenue);
-
+    const font = { family: 'Cairo' };
     const make = (id, conf) => {
-      const ctx = document.getElementById(id);
-      if (!ctx) return;
-      const parent = ctx.closest('.chart-box');
-      if (!conf.labels.length || !conf.labels.some((l, i) => conf.data[i])) {
-        parent.innerHTML = '<div class="empty-chart">لا توجد مبيعات حالياً.</div>';
+      const { canvas, box } = chartBox(id);
+      if (!box) return;
+      const hasData = conf.data.some((v) => Number(v) > 0);
+      let empty = box.querySelector('.empty');
+      if (!hasData) {
+        canvas.hidden = true;
+        if (!empty) { empty = document.createElement('p'); empty.className = 'empty'; box.appendChild(empty); }
+        empty.textContent = conf.emptyText || 'لا توجد مبيعات مؤكدة بعد.';
         return;
       }
-      ctx.getContext('2d');
-      charts.push(new Chart(ctx, {
+      canvas.hidden = false;
+      if (empty) empty.remove();
+      charts.push(new Chart(canvas, {
         type: conf.type,
-        data: {
-          labels: conf.labels,
-          datasets: [{
-            label: conf.datasetLabel || '',
-            data: conf.data,
-            backgroundColor: conf.colors || GREEN,
-            borderColor: conf.border || conf.colors || GREEN,
-            borderWidth: conf.borderWidth !== undefined ? conf.borderWidth : 1,
-          }],
-        },
+        data: { labels: conf.labels, datasets: [{ label: 'الإيرادات (د.م.)', data: conf.data, backgroundColor: conf.colors, borderColor: conf.type === 'doughnut' ? '#fff' : conf.colors, borderWidth: conf.type === 'doughnut' ? 2 : 0, borderRadius: conf.type === 'bar' ? 6 : 0 }] },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          indexAxis: conf.indexAxis || 'x',
-          plugins: { legend: { display: !!conf.legend } },
-          scales: {
-            x: { grid: { display: false }, ticks: { font: { family: 'Cairo' } } },
-            y: { beginAtZero: true, grid: { color: '#EEF4EF' }, ticks: { font: { family: 'Cairo' } } },
+          responsive: true, maintainAspectRatio: false, indexAxis: conf.indexAxis || 'x', locale: 'en-US',
+          plugins: {
+            legend: { display: conf.type === 'doughnut', position: 'bottom', rtl: true, labels: { font } },
+            tooltip: { rtl: true, callbacks: { label: (ctx) => ' ' + mad(ctx.raw) } },
+          },
+          scales: conf.type === 'doughnut' ? {} : {
+            x: { grid: { display: conf.indexAxis === 'y' }, ticks: { font }, beginAtZero: true },
+            y: { grid: { color: '#EEF4EF', display: conf.indexAxis !== 'y' }, ticks: { font }, beginAtZero: true },
           },
         },
       }));
     };
-
-    make('chartRevenue', {
-      type: 'bar',
-      labels: labels,
-      data: revenue,
-      colors: '#16A34A',
-      datasetLabel: 'الإيرادات (د.م.)',
-    });
-
-    make('chartTop', {
-      type: 'bar',
-      indexAxis: 'y',
-      labels: top.map((r) => r.name),
-      data: top.map((r) => r.revenue),
-      colors: '#0E5E2D',
-      datasetLabel: 'الإيرادات (د.م.)',
-    });
-
-    const catLabels = byCat.map((c) => catLabel(c.label));
-    make('chartCat', {
-      type: 'doughnut',
-      labels: catLabels,
-      data: byCat.map((c) => c.revenue),
-      colors: GREEN,
-      legend: true,
-      borderWidth: 2,
-      datasetLabel: 'الإيرادات (د.م.)',
-    });
+    make('chartRevenue', { type: 'bar', labels: byMonth.map((r) => monthLabel(r.ym)), data: byMonth.map((r) => r.revenue), colors: '#16A34A' });
+    make('chartTop', { type: 'bar', indexAxis: 'y', labels: top.map((r) => r.name), data: top.map((r) => r.revenue), colors: '#0E5E2D' });
+    make('chartCat', { type: 'doughnut', labels: byCat.map((c) => catLabel(c.label)), data: byCat.map((c) => c.revenue), colors: GREEN });
   }
 
-  const CAT_NAMES = { amlou: 'أملو', miels: 'العسل', huiles: 'الزيوت', cosmetiques: 'عطور', autres: 'منتوجات أخرى', recettes: 'وصفات فيه شفاء', packs: 'باقات فيه شفاء', thes: 'الشاي' };
-  const catLabel = (slug) => CAT_NAMES[slug] || slug || '—';
-
-  function esc(s) {
-    return String(s).replace(/[&<>"']/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m]));
-  }
-
-  // ---- Orders: grouped by user, date filter, confined scroll ----
-  function currentMonthBounds() {
-    const now = new Date();
-    const y = now.getFullYear();
-    const m = now.getMonth();
-    const pad = (n) => String(n).padStart(2,'0');
-    const first = y + '-' + pad(m+1) + '-01';
-    const lastDay = new Date(y, m+1, 0).getDate();
-    const last = y + '-' + pad(m+1) + '-' + pad(lastDay);
-    return { from: first, to: last };
-  }
-
-  function initOrdersFilters() {
-    const from = $('#ordersFrom');
-    const to = $('#ordersTo');
-    if (!from || !to) return;
-    const bounds = currentMonthBounds();
-    from.value = bounds.from;
-    to.value = bounds.to;
-    $('#ordersFilterBtn').addEventListener('click', renderOrdersFiltered);
-    $('#ordersResetBtn').addEventListener('click', function () {
-      const b = currentMonthBounds();
-      from.value = b.from;
-      to.value = b.to;
-      renderOrdersFiltered();
-    });
-    from.addEventListener('change', renderOrdersFiltered);
-    to.addEventListener('change', renderOrdersFiltered);
-  }
-
-  function renderOrdersFiltered() {
-    const fromVal = $('#ordersFrom') ? $('#ordersFrom').value : '';
-    const toVal = $('#ordersTo') ? $('#ordersTo').value : '';
-    let filtered = allLatest.slice();
-    // only current month by default if inputs empty -> use current month bounds
-    if (fromVal || toVal) {
-      filtered = filtered.filter((r) => {
-        const d = String(r.created || '').slice(0,10);
-        if (fromVal && d < fromVal) return false;
-        if (toVal && d > toVal) return false;
-        return true;
-      });
-    } else {
-      // fallback to current month
-      const m = new Date().toISOString().slice(0,7);
-      filtered = filtered.filter((r) => String(r.created||'').slice(0,7) === m);
-    }
-    renderOrdersGrouped(filtered);
-  }
-
-  function renderOrdersGrouped(items) {
-    const box = $('#ordersTable');
-    const summary = $('#ordersSummary');
-    if (!items.length) {
-      box.innerHTML = '<div class="empty-chart">لا توجد طلبات في هذه الفترة.</div>';
-      if (summary) summary.textContent = '0 طلب';
+  /* ---------------- orders ---------------- */
+  async function loadOrders() {
+    const from = $('#ordersFrom').value, to = $('#ordersTo').value;
+    const b = currentMonthBounds();
+    $('#ordersTitle').textContent = from === b.from && to === b.to ? 'طلبات هذا الشهر'
+      : 'الطلبات' + (from ? ' من ' + from : '') + (to ? ' إلى ' + to : '');
+    const qs = new URLSearchParams();
+    if (from) qs.set('from', from);
+    if (to) qs.set('to', to);
+    try {
+      const data = await apiJson('/api/v1/orders?' + qs.toString());
+      orders = data.orders || [];
+    } catch (e) {
+      if (e.status !== 401) $('#ordersList').innerHTML = '<p class="empty">' + esc(e.message) + '</p>';
       return;
     }
-    // group by buyer+phone
-    const groups = {};
-    items.forEach((r) => {
-      const key = (r.buyer || 'مجهول') + '|' + (r.phone || '');
-      if (!groups[key]) groups[key] = { buyer: r.buyer || 'مجهول', phone: r.phone || '—', items: [], total: 0, earliest: r.created };
-      groups[key].items.push(r);
-      groups[key].total += (Number(r.price)||0) * (Number(r.qty)||0);
-      if (r.created && r.created < groups[key].earliest) groups[key].earliest = r.created;
-    });
-    const grouped = Object.values(groups).sort((a,b) => String(b.earliest).localeCompare(String(a.earliest)));
-    const html = grouped.map((g) => {
-      const date = String(g.earliest||'').slice(0,10);
-      const rows = g.items.map((r) =>
-        '<tr>' +
-        '  <td>' + esc(r.product_name) + '</td>' +
-        '  <td><span class="cat-tag">' + esc(catLabel(r.cat)) + '</span></td>' +
-        '  <td>' + mad(r.price) + ' × ' + r.qty + '</td>' +
-        '  <td><b>' + mad((Number(r.price)||0)*(Number(r.qty)||0)) + '</b></td>' +
-        '</tr>'
-      ).join('');
-      return (
-        '<div class="buyer-group">' +
-        '  <div class="buyer-head">' +
-        '    <span class="buyer-name">👤 ' + esc(g.buyer) + ' <span class="buyer-phone" dir="ltr">' + esc(g.phone) + '</span></span>' +
-        '    <span class="buyer-date">' + esc(date) + '</span>' +
-        '    <span class="buyer-total">' + mad(g.total) + '</span>' +
-        '  </div>' +
-        '  <div class="buyer-items"><table><thead><tr><th>المنتج</th><th>الفئة</th><th>السعر × الكمية</th><th>المجموع</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
-        '</div>'
-      );
-    }).join('');
-    box.innerHTML = html;
-    if (summary) summary.textContent = grouped.length + ' زبون · ' + items.length + ' عنصر · ' + mad(grouped.reduce((s,g)=>s+g.total,0)) + ' إجمالي';
+    renderOrders();
   }
 
-  async function exportExcel() {
-    const month = $('#monthSel').value || '';
-    const url = '/api/v1/sales/export' + (month ? '?month=' + encodeURIComponent(month) : '');
+  function renderOrders() {
+    const pending = orders.filter((o) => o.status === 'pending');
+    const confirmed = orders.filter((o) => o.status === 'confirmed');
+    $('#nAll').textContent = orders.length;
+    $('#nPending').textContent = pending.length;
+    $('#nConfirmed').textContent = confirmed.length;
+    const list = statusFilter === 'pending' ? pending : statusFilter === 'confirmed' ? confirmed : orders;
+
+    const box = $('#ordersList');
+    if (!list.length) {
+      box.innerHTML = '<p class="empty">لا توجد طلبات في هذه الفترة.</p>';
+    } else {
+      box.innerHTML = list.map(orderHTML).join('');
+    }
+    const confirmedTotal = confirmed.reduce((s, o) => s + o.total, 0);
+    const pendingTotal = pending.reduce((s, o) => s + o.total, 0);
+    $('#ordersSummary').textContent = confirmed.length + ' مؤكد بقيمة ' + mad(confirmedTotal) +
+      ' · ' + pending.length + ' بانتظار التأكيد بقيمة ' + mad(pendingTotal);
+  }
+
+  function orderHTML(o) {
+    const isPending = o.status === 'pending';
+    const wa = waNumber(o.phone);
+    const loc = safeUrl(o.location);
+    const phone = o.phone
+      ? '<a class="chip" dir="ltr" href="tel:' + esc(o.phone.replace(/[^\d+]/g, '')) + '">' + esc(o.phone) + '</a>' : '';
+    const waLink = wa
+      ? '<a class="chip" href="https://wa.me/' + wa + '" target="_blank" rel="noopener">واتساب</a>' : '';
+    const addr = (o.address || o.city || loc)
+      ? '<div class="order-addr">' +
+        (o.city ? '<span><b>المدينة:</b> ' + esc(o.city) + '</span>' : '') +
+        (o.address ? '<span><b>العنوان:</b> ' + esc(o.address) + '</span>' : '') +
+        (loc ? '<span><a href="' + esc(loc) + '" target="_blank" rel="noopener noreferrer">فتح الموقع على الخريطة</a></span>' : '') +
+        '</div>'
+      : '';
+    const rows = o.items.map((it) =>
+      '<tr><td>' + esc(it.product_name) + (it.size ? ' <span class="chip" dir="ltr">' + esc(it.size) + '</span>' : '') + '</td>' +
+      '<td><span class="cat-tag">' + esc(catLabel(it.cat)) + '</span></td>' +
+      '<td class="num">' + mad(it.price) + ' × ' + Number(it.qty) + '</td>' +
+      '<td class="num"><b>' + mad((Number(it.price) || 0) * (Number(it.qty) || 0)) + '</b></td></tr>'
+    ).join('');
+    const sourceLabel = o.source === 'manual' ? 'يدوي' : o.source === 'chatbot' ? 'المساعد' : 'المتجر';
+    const date = o.status === 'confirmed'
+      ? 'أُكّد: ' + fmtDate(o.confirmed_at) + (o.source !== 'manual' ? ' · طُلب: ' + fmtDate(o.created) : '')
+      : 'طُلب: ' + fmtDate(o.created);
+    return (
+      '<article class="order ' + esc(o.status) + '" data-oid="' + esc(o.id) + '">' +
+      '  <div class="order-head">' +
+      '    <span class="buyer">' + esc(o.buyer || 'بدون اسم') + '</span>' + phone + waLink +
+      '    <span class="status ' + esc(o.status) + '">' + (isPending ? 'بانتظار التأكيد' : 'مؤكد') + '</span>' +
+      '    <span class="source">' + sourceLabel + '</span>' +
+      '    <span class="order-date">' + esc(date) + '</span>' +
+      '  </div>' + addr +
+      '  <div class="table-wrap"><table class="items"><thead><tr><th>المنتج</th><th>الفئة</th><th>السعر × الكمية</th><th>المجموع</th></tr></thead><tbody>' + rows + '</tbody></table></div>' +
+      '  <div class="order-foot">' +
+      '    <div class="totals"><span>المنتجات: <b class="num">' + mad(o.subtotal) + '</b></span>' +
+      '      <span>التوصيل: <b class="num">' + (o.delivery_fee ? mad(o.delivery_fee) : 'مجاني') + '</b></span>' +
+      '      <span class="grand">المجموع: <b class="num">' + mad(o.total) + '</b></span></div>' +
+      (isPending
+        ? '<div class="order-actions"><button type="button" class="btn-primary sm" data-action="confirm">تأكيد الطلب</button>' +
+          '<button type="button" class="btn-danger" data-action="reject">رفض وحذف</button></div>'
+        : '') +
+      '  </div>' +
+      '</article>'
+    );
+  }
+
+  async function onOrderAction(e) {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const card = btn.closest('.order');
+    const oid = card.dataset.oid;
+    const order = orders.find((o) => o.id === oid);
+    const isConfirm = btn.dataset.action === 'confirm';
+    const ok = await AdminAuth.confirm(
+      isConfirm
+        ? 'تأكيد طلب « ' + (order ? order.buyer : '') + ' » بقيمة ' + mad(order ? order.total : 0) + '؟ سيُحتسب في إيرادات هذا الشهر.'
+        : 'رفض طلب « ' + (order ? order.buyer : '') + ' »؟ سيتم حذفه نهائياً.',
+      isConfirm ? 'تأكيد الطلب' : 'رفض وحذف',
+      !isConfirm
+    );
+    if (!ok) return;
+    $$('button', card).forEach((b) => { b.disabled = true; });
+    try {
+      await apiJson('/api/v1/orders/' + encodeURIComponent(oid) + '/' + btn.dataset.action, { method: 'POST' });
+      toast(isConfirm ? 'تم تأكيد الطلب.' : 'تم رفض الطلب وحذفه.');
+      await Promise.all([loadSummary(), loadOrders()]);
+    } catch (err) {
+      if (err.status !== 401) toast(err.message, 'error');
+      $$('button', card).forEach((b) => { b.disabled = false; });
+    }
+  }
+
+  /* ---------------- manual order ---------------- */
+  async function loadCatalogForOrders() {
+    try {
+      const data = await apiJson('/api/v1/catalog');
+      if (window.Delivery) Delivery.configure(data.settings);
+      catalog.categories = (data.categories || []).map((c) => ({ slug: c.id, title: c.title_ar || c.id }));
+      catalog.products = [];
+      (data.categories || []).forEach((c) => (c.products || []).forEach((p) => {
+        const first = (p.sizes || [])[0];
+        catalog.products.push({ id: p.id, name: p.name, cat: c.id, price: first ? Number(first.price) : p.min });
+      }));
+      $('#productList').innerHTML = catalog.products.map((p) => '<option value="' + esc(p.name) + '"></option>').join('');
+    } catch (e) { /* the form still works with typed products */ }
+  }
+
+  function catOptions(selected) {
+    return '<option value="">اختر الفئة</option>' + catalog.categories.map((c) =>
+      '<option value="' + esc(c.slug) + '"' + (c.slug === selected ? ' selected' : '') + '>' + esc(c.title) + '</option>').join('');
+  }
+
+  function addItemRow() {
+    const row = document.createElement('div');
+    row.className = 'mo-item';
+    row.innerHTML =
+      '<input type="text" class="input sm mo-name" list="productList" placeholder="اسم المنتج" aria-label="اسم المنتج" maxlength="80">' +
+      '<select class="input sm mo-cat" aria-label="الفئة">' + catOptions('') + '</select>' +
+      '<input type="number" class="input sm mo-price" min="0" step="0.01" placeholder="السعر" aria-label="السعر">' +
+      '<input type="number" class="input sm mo-qty" min="1" step="1" value="1" aria-label="الكمية">' +
+      '<button type="button" class="icon-btn danger mo-del" title="حذف" aria-label="حذف المنتج">' +
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg></button>';
+    $('#moItems').appendChild(row);
+    return row;
+  }
+
+  function updateTotals() {
+    let subtotal = 0;
+    $$('.mo-item').forEach((row) => {
+      subtotal += (parseFloat($('.mo-price', row).value) || 0) * (parseInt($('.mo-qty', row).value, 10) || 0);
+    });
+    const fee = window.Delivery ? Delivery.fee(subtotal, $('#moCity').value) : 0;
+    $('#moSubtotal').textContent = mad(subtotal);
+    $('#moFee').textContent = fee ? mad(fee) : 'مجاني';
+    $('#moTotal').textContent = mad(subtotal + fee);
+  }
+
+  function openModal() {
+    $('#manualOrderForm').reset();
+    $('#moItems').innerHTML = '';
+    addItemRow();
+    updateTotals();
+    $('#manualOrderModal').hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => $('#moBuyer').focus(), 30);
+  }
+
+  function closeModal() {
+    $('#manualOrderModal').hidden = true;
+    document.body.style.overflow = '';
+  }
+
+  async function submitManualOrder(e) {
+    e.preventDefault();
+    const buyer = $('#moBuyer').value.trim();
+    if (!buyer) { toast('اسم الزبون مطلوب.', 'error'); $('#moBuyer').focus(); return; }
+    const items = [];
+    for (const row of $$('.mo-item')) {
+      const name = $('.mo-name', row).value.trim();
+      const price = parseFloat($('.mo-price', row).value);
+      const qty = parseInt($('.mo-qty', row).value, 10);
+      const cat = $('.mo-cat', row).value;
+      if (!name && isNaN(price)) continue; // empty line
+      if (!name) { toast('اسم المنتج مطلوب.', 'error'); $('.mo-name', row).focus(); return; }
+      if (!cat) { toast('يرجى اختيار فئة « ' + name + ' ».', 'error'); $('.mo-cat', row).focus(); return; }
+      if (isNaN(price) || price < 0) { toast('سعر « ' + name + ' » غير صالح.', 'error'); $('.mo-price', row).focus(); return; }
+      if (isNaN(qty) || qty < 1) { toast('كمية « ' + name + ' » غير صالحة.', 'error'); $('.mo-qty', row).focus(); return; }
+      const known = catalog.products.find((p) => p.name === name && p.cat === cat);
+      items.push({ id: known ? known.id : '', name, cat, price, qty });
+    }
+    if (!items.length) { toast('أضف منتجاً واحداً على الأقل.', 'error'); return; }
+
+    const btn = $('#btnModalSubmit');
+    btn.disabled = true;
+    try {
+      await apiJson('/api/v1/admin/orders', {
+        method: 'POST',
+        body: {
+          buyer,
+          phone: $('#moPhone').value.trim(),
+          address: $('#moAddress').value.trim(),
+          city: $('#moCity').value.trim(),
+          location: $('#moLocation').value.trim(),
+          items,
+        },
+      });
+      closeModal();
+      toast('تم حفظ الطلب اليدوي.');
+      await Promise.all([loadSummary(), loadOrders()]);
+    } catch (err) {
+      if (err.status !== 401) toast(err.message, 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  function initManualOrder() {
+    $('#btnAddManualOrder').addEventListener('click', openModal);
+    $('#modalClose').addEventListener('click', closeModal);
+    $('#btnModalCancel').addEventListener('click', closeModal);
+    $('#manualOrderModal').addEventListener('click', (e) => { if (e.target.id === 'manualOrderModal') closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#manualOrderModal').hidden) closeModal(); });
+    $('#btnAddOrderItem').addEventListener('click', () => { $('.mo-name', addItemRow()).focus(); });
+    $('#manualOrderForm').addEventListener('submit', submitManualOrder);
+    $('#moCity').addEventListener('input', updateTotals);
+    const items = $('#moItems');
+    items.addEventListener('input', (e) => {
+      if (e.target.classList.contains('mo-name')) {
+        const row = e.target.closest('.mo-item');
+        const p = catalog.products.find((x) => x.name === e.target.value.trim());
+        if (p) {
+          $('.mo-cat', row).value = p.cat;
+          if (p.price != null && $('.mo-price', row).value === '') $('.mo-price', row).value = p.price;
+        }
+      }
+      updateTotals();
+    });
+    items.addEventListener('change', updateTotals);
+    items.addEventListener('click', (e) => {
+      const del = e.target.closest('.mo-del');
+      if (!del) return;
+      if ($$('.mo-item').length > 1) del.closest('.mo-item').remove();
+      else { $('#manualOrderForm').querySelectorAll('.mo-item input').forEach((i) => { i.value = i.classList.contains('mo-qty') ? '1' : ''; }); }
+      updateTotals();
+    });
+  }
+
+  /* ---------------- export ---------------- */
+  async function download(url, btn, fallbackName, errorText) {
+    btn.disabled = true;
     try {
       const res = await AdminAuth.api(url);
       if (!res.ok) throw new Error('api');
       const blob = await res.blob();
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = res.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1] || 'ventes.xlsx';
+      a.download = (res.headers.get('Content-Disposition') || '').match(/filename="([^"]+)"/)?.[1] || fallbackName;
       document.body.appendChild(a);
       a.click();
       a.remove();
       setTimeout(() => URL.revokeObjectURL(a.href), 3000);
     } catch (e) {
-      alert('تعذر إنشاء ملف Excel.');
+      if (e.status !== 401) toast(errorText, 'error');
+    } finally {
+      btn.disabled = false;
     }
   }
 
-  function start() {
-    $('#btnExport').addEventListener('click', exportExcel);
-    const lo = $('#btnLogout');
-    if (lo) lo.addEventListener('click', function () { AdminAuth.logout(); });
-    load();
+  function exportExcel() {
+    const month = $('#monthSel').value;
+    download('/api/v1/sales/export' + (month ? '?month=' + encodeURIComponent(month) : ''), $('#btnExport'), 'ventes.xlsx', 'تعذر إنشاء ملف Excel.');
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    if (!window.AdminAuth) return;
-    AdminAuth.require(start);
-  });
+  function backup() {
+    download('/api/v1/admin/backup', $('#btnBackup'), 'fihi-chifae-backup.zip', 'تعذر إنشاء النسخة الاحتياطية.');
+  }
+
+  /* ---------------- init (listeners bound exactly once) ---------------- */
+  function start() {
+    const b = currentMonthBounds();
+    $('#ordersFrom').value = b.from;
+    $('#ordersTo').value = b.to;
+    $('#ordersFrom').addEventListener('change', loadOrders);
+    $('#ordersTo').addEventListener('change', loadOrders);
+    $('#ordersResetBtn').addEventListener('click', () => {
+      const c = currentMonthBounds();
+      $('#ordersFrom').value = c.from;
+      $('#ordersTo').value = c.to;
+      loadOrders();
+    });
+    $$('.tab').forEach((tab) => tab.addEventListener('click', () => {
+      statusFilter = tab.dataset.filter;
+      $$('.tab').forEach((t) => { t.classList.toggle('active', t === tab); t.setAttribute('aria-selected', String(t === tab)); });
+      renderOrders();
+    }));
+    $('#ordersList').addEventListener('click', onOrderAction);
+    $('#btnExport').addEventListener('click', exportExcel);
+    $('#btnBackup').addEventListener('click', backup);
+    initManualOrder();
+
+    loadSummary().then(loadOrders);
+    loadCatalogForOrders();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => AdminAuth.require(start));
 })();

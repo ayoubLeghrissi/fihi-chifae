@@ -1,8 +1,8 @@
 """Security primitives: password hashing, session store, login throttling.
 
 - Passwords are stored as PBKDF2-HMAC-SHA256: ``pbkdf2$<iterations>$<salt>$<hex>``.
-- Admin sessions are opaque random tokens held in memory (server restart logs
-  the user out, which is the expected behaviour for this application).
+- Admin sessions are opaque random tokens carried by an HttpOnly cookie and
+  stored hashed in the live database (see ``db.create_session``).
 - Login throttling prevents brute-force attempts against the admin endpoint.
 """
 
@@ -12,7 +12,7 @@ import secrets
 import threading
 import time
 
-from .config import PASSWORD_ITERATIONS, LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW, SESSION_TTL
+from .config import LOGIN_MAX_ATTEMPTS, LOGIN_WINDOW, PASSWORD_ITERATIONS
 
 # ---------------------------------------------------------------------------
 # password hashing
@@ -49,62 +49,13 @@ def hash_token(token):
 
 
 # ---------------------------------------------------------------------------
-# session store
-# ---------------------------------------------------------------------------
-
-
-class SessionStore:
-    """In-memory admin sessions: token -> {exp, created, user, ip}."""
-
-    def __init__(self, ttl=SESSION_TTL):
-        self._ttl = ttl
-        self._sessions = {}
-        self._lock = threading.RLock()
-
-    def _cleanup(self, now):
-        stale = [t for t, s in self._sessions.items() if s["exp"] <= now]
-        for t in stale:
-            self._sessions.pop(t, None)
-
-    def issue(self, user, ip):
-        now = time.time()
-        with self._lock:
-            self._cleanup(now)
-            token = secrets.token_hex(24)
-            self._sessions[token] = {
-                "exp": now + self._ttl,
-                "created": int(now),
-                "user": user,
-                "ip": ip,
-            }
-            return {"token": token, "expires_in": self._ttl}
-
-    def check(self, token):
-        now = time.time()
-        if not token:
-            return None
-        with self._lock:
-            session = self._sessions.get(token)
-            if not session or session["exp"] <= now:
-                self._sessions.pop(token, None)
-                return None
-            return session
-
-    def revoke(self, token):
-        with self._lock:
-            self._sessions.pop(token, None)
-
-    def revoke_all(self):
-        with self._lock:
-            self._sessions.clear()
-
-
-# ---------------------------------------------------------------------------
 # login throttling (brute-force protection)
 # ---------------------------------------------------------------------------
 
 
 class LoginThrottle:
+    """Sliding-window counter per key (client IP); also used for public endpoints."""
+
     def __init__(self, max_attempts=LOGIN_MAX_ATTEMPTS, window=LOGIN_WINDOW):
         self._max = max_attempts
         self._window = window
@@ -148,10 +99,10 @@ SECURITY_HEADERS = {
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
     "Cross-Origin-Opener-Policy": "same-origin",
-    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(self)",
     "Content-Security-Policy": (
         "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "script-src 'self' https://cdn.jsdelivr.net; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
         "font-src 'self' https://fonts.gstatic.com; "
         "img-src 'self' data: blob:; "

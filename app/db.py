@@ -1,10 +1,25 @@
-"""SQLite persistence: schema, migrations, seeds and admin credential store."""
+"""SQLite persistence: schema, migrations, seeds, sessions and admin credentials.
 
+Two databases are used:
+
+- the *live* database holds everything the shop works with (catalog, orders,
+  admin account, sessions, newsletter subscribers);
+- the *archive* database keeps deleted products and categories.
+
+Both files live in ``config.DATA_DIR`` (a persistent volume in production).
+"""
+
+import datetime
+import io
 import os
 import secrets
+import shutil
 import sqlite3
 import threading
+import tempfile
 import time
+import zipfile
+import zoneinfo
 
 from . import config
 from .security import hash_password, hash_token, verify_password
@@ -13,8 +28,54 @@ _lock = threading.RLock()
 # Public name so other modules can serialize compound write transactions.
 db_lock = _lock
 
+_TZ = zoneinfo.ZoneInfo(config.TIMEZONE)
+
 # ---------------------------------------------------------------------------
-# catalog seed (fihi-chifae home catalog)
+# Database connections
+# ---------------------------------------------------------------------------
+
+
+def _connect(path):
+    conn = sqlite3.connect(path, timeout=10)
+    conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA foreign_keys = ON")
+    conn.execute("PRAGMA busy_timeout = 10000")
+    return conn
+
+
+def live_db():
+    """Connection to the live database (active data)."""
+    return _connect(config.DB_FILE)
+
+
+def archive_db():
+    """Connection to the archive database (deleted products/categories)."""
+    return _connect(config.ARCHIVE_DB_FILE)
+
+
+# Backward compatibility - default to the live database.
+db = live_db
+
+
+# ---------------------------------------------------------------------------
+# time helpers (shop local time, Morocco)
+# ---------------------------------------------------------------------------
+
+
+def now():
+    """Current shop-local timestamp, ``YYYY-MM-DDTHH:MM:SS``."""
+    return datetime.datetime.now(_TZ).strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def current_month():
+    return datetime.datetime.now(_TZ).strftime("%Y-%m")
+
+
+_now = now  # legacy alias
+
+
+# ---------------------------------------------------------------------------
+# demo catalog (only inserted when FIHI_SEED_DEMO=1, e.g. for local previews)
 # ---------------------------------------------------------------------------
 
 SEED_CATEGORIES = [
@@ -76,7 +137,8 @@ SEED_PRODUCTS = [
 
 CAT_IMG = {c[0]: c[4] for c in SEED_CATEGORIES}
 
-SCHEMA = """
+# Live database schema (active data)
+LIVE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS categories(
     slug TEXT PRIMARY KEY,
@@ -93,17 +155,26 @@ CREATE TABLE IF NOT EXISTS products(
     featured INTEGER DEFAULT 0,
     custom INTEGER DEFAULT 0,
     created TEXT,
-    sizes TEXT
+    sizes TEXT,
+    description TEXT
 );
 CREATE TABLE IF NOT EXISTS orders(
     id TEXT PRIMARY KEY,
     buyer TEXT,
     phone TEXT,
-    created TEXT
+    address TEXT,
+    city TEXT,
+    location TEXT,
+    created TEXT,
+    status TEXT DEFAULT 'pending',
+    confirmed_at TEXT,
+    delivery_fee REAL DEFAULT 0,
+    source TEXT DEFAULT 'online'
 );
 CREATE TABLE IF NOT EXISTS order_items(
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id TEXT,
+    product_id TEXT,
     product_name TEXT,
     cat TEXT,
     price REAL,
@@ -111,6 +182,31 @@ CREATE TABLE IF NOT EXISTS order_items(
     created TEXT,
     size TEXT
 );
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+CREATE TABLE IF NOT EXISTS password_resets(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token_hash TEXT NOT NULL,
+    email TEXT,
+    created INTEGER NOT NULL,
+    expires INTEGER NOT NULL,
+    used INTEGER DEFAULT 0
+);
+CREATE TABLE IF NOT EXISTS sessions(
+    token_hash TEXT PRIMARY KEY,
+    user TEXT NOT NULL,
+    ip TEXT,
+    created INTEGER NOT NULL,
+    expires INTEGER NOT NULL
+);
+CREATE TABLE IF NOT EXISTS newsletter(
+    email TEXT PRIMARY KEY,
+    lang TEXT,
+    created TEXT
+);
+"""
+
+# Archive database schema (deleted products and categories)
+ARCHIVE_SCHEMA = """
 CREATE TABLE IF NOT EXISTS old_products(
     id TEXT PRIMARY KEY,
     original_id TEXT,
@@ -123,16 +219,17 @@ CREATE TABLE IF NOT EXISTS old_products(
     created TEXT,
     revoked_at TEXT,
     revoked_by TEXT,
-    sizes TEXT
+    sizes TEXT,
+    description TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_old_products_original ON old_products(original_id);
-CREATE TABLE IF NOT EXISTS password_resets(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    token_hash TEXT NOT NULL,
-    email TEXT,
-    created INTEGER NOT NULL,
-    expires INTEGER NOT NULL,
-    used INTEGER DEFAULT 0
+CREATE TABLE IF NOT EXISTS old_categories(
+    id TEXT PRIMARY KEY,
+    slug TEXT,
+    title_ar TEXT, title_fr TEXT, title_en TEXT,
+    img TEXT,
+    archived_at TEXT,
+    archived_by TEXT
 );
 """
 
@@ -143,21 +240,6 @@ CATEGORY_NAME_UPDATES = [
     ("packs", "باقات فيه شفاء", "Packs", "Packs"),
     ("cosmetiques", "عطور", "Parfums", "Perfumes"),
 ]
-
-
-def db():
-    conn = sqlite3.connect(config.DB_FILE, timeout=10)
-    conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA foreign_keys = ON")
-    return conn
-
-
-def _now():
-    return time.strftime("%Y-%m-%dT%H:%M:%S")
-
-
-# public alias used by the API layer
-now = _now
 
 
 def get_meta(conn, key, default=None):
@@ -180,8 +262,40 @@ def _ensure_column(conn, table, column, decl):
         conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {decl}")
 
 
+def _ensure_data_dir():
+    os.makedirs(config.DATA_DIR, exist_ok=True)
+    os.makedirs(config.UPLOAD_DIR, exist_ok=True)
+    probe = os.path.join(config.DATA_DIR, ".write-test")
+    try:
+        with open(probe, "w") as fh:
+            fh.write("ok")
+        os.remove(probe)
+    except OSError as exc:
+        raise SystemExit(
+            f"[db] data directory {config.DATA_DIR} is not writable ({exc}). "
+            "Mount a volume there and make it writable (Railway: set RAILWAY_RUN_UID=0)."
+        ) from exc
+
+
+def _migrate_legacy_uploads():
+    """Copy images uploaded before the data volume existed into it (once)."""
+    src, dst = config.LEGACY_UPLOAD_DIR, config.UPLOAD_DIR
+    if os.path.abspath(src) == os.path.abspath(dst) or not os.path.isdir(src):
+        return
+    copied = 0
+    for name in os.listdir(src):
+        s, d = os.path.join(src, name), os.path.join(dst, name)
+        if name.startswith(".") or not os.path.isfile(s) or os.path.exists(d):
+            continue
+        shutil.copy2(s, d)
+        copied += 1
+    if copied:
+        print(f"[db] copied {copied} uploaded image(s) into {dst}")
+
+
 def init_db():
     """Create/migrate the schema and seed the reference catalog."""
+    _ensure_data_dir()
 
     # One-time migration of the old database filename.
     legacy = os.path.join(config.BASE, "dhenbio.db")
@@ -190,34 +304,46 @@ def init_db():
         print(f"[db] migrated legacy database -> {config.DB_FILE}")
 
     with _lock:
-        with db() as conn:
-            conn.executescript(SCHEMA)
-            # migrations for databases created before size variants existed
+        with live_db() as conn:
+            conn.execute("PRAGMA journal_mode = WAL")
+            conn.executescript(LIVE_SCHEMA)
+            # migrations for databases created by older releases
             _ensure_column(conn, "products", "sizes", "TEXT")
-            _ensure_column(conn, "old_products", "sizes", "TEXT")
+            _ensure_column(conn, "products", "description", "TEXT")
             _ensure_column(conn, "order_items", "size", "TEXT")
+            _ensure_column(conn, "order_items", "product_id", "TEXT")
+            _ensure_column(conn, "orders", "status", "TEXT DEFAULT 'pending'")
+            _ensure_column(conn, "orders", "address", "TEXT")
+            _ensure_column(conn, "orders", "city", "TEXT")
+            _ensure_column(conn, "orders", "location", "TEXT")
+            _ensure_column(conn, "orders", "confirmed_at", "TEXT")
+            _ensure_column(conn, "orders", "delivery_fee", "REAL DEFAULT 0")
+            _ensure_column(conn, "orders", "source", "TEXT DEFAULT 'online'")
+            # orders confirmed before confirmation dates were recorded
+            conn.execute(
+                "UPDATE orders SET confirmed_at=created"
+                " WHERE status='confirmed' AND confirmed_at IS NULL"
+            )
 
-            seeded = get_meta(conn, "seeded")
-            if not seeded:
+            # demo catalog only on request (a real shop starts empty)
+            if config.SEED_DEMO and not get_meta(conn, "seeded"):
                 conn.executemany(
                     "INSERT OR REPLACE INTO categories(slug,title_ar,title_fr,title_en,img)"
                     " VALUES(?,?,?,?,?)",
                     SEED_CATEGORIES,
                 )
-                now = _now()
+                ts = now()
                 conn.executemany(
                     "INSERT OR REPLACE INTO products"
                     " (id,name,cat,min,max,img,ribbon,featured,custom,created)"
                     " VALUES(?,?,?,?,?,?,?,?,0,?)",
                     [
-                        (p[0], p[1], p[2], p[3], p[4], p[5] or CAT_IMG[p[2]], p[6], p[7], now)
+                        (p[0], p[1], p[2], p[3], p[4], p[5] or CAT_IMG[p[2]], p[6], p[7], ts)
                         for p in SEED_PRODUCTS
                     ],
                 )
                 set_meta(conn, "seeded", "1")
-                print(
-                    f"[db] seeded reference catalog (8 categories, {len(SEED_PRODUCTS)} products)"
-                )
+                print(f"[db] seeded reference catalog ({len(SEED_PRODUCTS)} products)")
 
             # keep previously-seeded databases in sync with the brand
             for slug, ar, fr, en in CATEGORY_NAME_UPDATES:
@@ -227,6 +353,21 @@ def init_db():
                 )
 
             init_admin(conn)
+            purge_expired_sessions(conn)
+
+        with archive_db() as conn:
+            conn.execute("PRAGMA journal_mode = WAL")
+            conn.executescript(ARCHIVE_SCHEMA)
+            _ensure_column(conn, "old_products", "sizes", "TEXT")
+            _ensure_column(conn, "old_products", "description", "TEXT")
+
+        _migrate_old_products_to_archive()
+    _migrate_legacy_uploads()
+
+
+# ---------------------------------------------------------------------------
+# admin account
+# ---------------------------------------------------------------------------
 
 
 def init_admin(conn):
@@ -234,43 +375,39 @@ def init_admin(conn):
     has_user = conn.execute("SELECT 1 FROM meta WHERE key='admin_user'").fetchone()
     stored_hash = get_meta(conn, "admin_pw_hash")
     if stored_hash and not stored_hash.startswith("pbkdf2$"):
-        # legacy (SHA-256) hash from an older build -> re-seed with the default
-        # password using the current, slow hashing scheme.
-        _reset_admin_password(conn, "hachage de mot de passe stabilisé")
+        # legacy (SHA-256) hash from an older build -> re-seed with the
+        # configured password using the current, slow hashing scheme.
+        _reset_admin_password(conn, "legacy hash upgraded")
     if not has_user:
-        print(
-            f"[auth] nouveau compte admin : {config.DEFAULT_ADMIN_USER} / "
-            f"{config.DEFAULT_ADMIN_PASS} (variable FIHI_ADMIN_* pour changer)"
-        )
-        _reset_admin_password(conn, "compte initial")
-    conn.execute(
-        "INSERT OR REPLACE INTO meta(key,value) VALUES('mfa_enabled',?)",
-        (get_meta(conn, "mfa_enabled") or "0",),
-    )
-    if not get_meta(conn, "admin_email"):
+        if config.IS_PRODUCTION and not config.ADMIN_PASSWORD_FROM_ENV:
+            raise SystemExit(
+                "[auth] FIHI_ADMIN_PASSWORD must be set to create the admin account in production"
+            )
+        print(f"[auth] admin account created for user '{config.DEFAULT_ADMIN_USER}'")
+        _reset_admin_password(conn, "initial account")
+    if get_meta(conn, "mfa_enabled") is None:
+        set_meta(conn, "mfa_enabled", "0")
+    # FIHI_ADMIN_EMAIL is the source of truth: changing it on the platform
+    # takes effect at the next start (the stored copy is only a fallback).
+    if config.ADMIN_EMAIL_FROM_ENV or not get_meta(conn, "admin_email"):
         set_meta(conn, "admin_email", config.DEFAULT_ADMIN_EMAIL)
-        print(
-            f"[auth] e-mail admin : {config.DEFAULT_ADMIN_EMAIL} "
-            f"(variable FIHI_ADMIN_EMAIL pour changer)"
-        )
 
 
 def get_reset_email(conn):
-    """Return the e-mail address a reset link can be sent to (or None)."""
+    """Address the reset link goes to: FIHI_ADMIN_EMAIL when set, else the stored one."""
+    if config.ADMIN_EMAIL_FROM_ENV:
+        return config.DEFAULT_ADMIN_EMAIL
     return get_meta(conn, "admin_email", "") or None
 
 
 def create_reset_record(conn, email):
     """Issue a single-use reset token (30 min TTL) for a password reset."""
     token = secrets.token_hex(32)
-    token_hash = hash_token(token)
     now_ts = int(time.time())
+    conn.execute("DELETE FROM password_resets WHERE used=0")  # one pending reset at a time
     conn.execute(
-        "DELETE FROM password_resets WHERE used=0",  # one pending reset at a time
-    )
-    conn.execute(
-        "INSERT INTO password_resets(token_hash,email,created,expires,used)" " VALUES(?,?,?,?,0)",
-        (token_hash, email, now_ts, now_ts + config.RESET_TOKEN_TTL_MS // 1000),
+        "INSERT INTO password_resets(token_hash,email,created,expires,used) VALUES(?,?,?,?,0)",
+        (hash_token(token), email, now_ts, now_ts + config.RESET_TOKEN_TTL_MS // 1000),
     )
     return token
 
@@ -279,10 +416,9 @@ def consume_reset_token(conn, token):
     """Validate + consume a reset token; returns the account e-mail or None."""
     if not token:
         return None
-    token_hash = hash_token(token)
     row = conn.execute(
-        "SELECT id,email,expires FROM password_resets" " WHERE token_hash=? AND used=0",
-        (token_hash,),
+        "SELECT id,email,expires FROM password_resets WHERE token_hash=? AND used=0",
+        (hash_token(token),),
     ).fetchone()
     if not row:
         return None
@@ -303,7 +439,7 @@ def _reset_admin_password(conn, reason):
     set_meta(conn, "admin_user", config.DEFAULT_ADMIN_USER)
     set_meta(conn, "admin_pw_salt", salt)
     set_meta(conn, "admin_pw_hash", hash_password(pw, salt))
-    print(f"[auth] identifiants admin réinitialisés ({reason})")
+    print(f"[auth] admin credentials set ({reason})")
 
 
 def set_admin_password(conn, password):
@@ -322,3 +458,125 @@ def verify_admin_password(conn, username, password):
 
 def is_mfa_enabled(conn):
     return get_meta(conn, "mfa_enabled", "0") == "1"
+
+
+# ---------------------------------------------------------------------------
+# admin sessions (stored hashed, so deployments do not log the admin out)
+# ---------------------------------------------------------------------------
+
+
+def create_session(user, ip):
+    token = secrets.token_urlsafe(32)
+    now_ts = int(time.time())
+    with _lock, live_db() as conn:
+        purge_expired_sessions(conn)
+        conn.execute(
+            "INSERT INTO sessions(token_hash,user,ip,created,expires) VALUES(?,?,?,?,?)",
+            (hash_token(token), user, ip, now_ts, now_ts + config.SESSION_TTL),
+        )
+    return token
+
+
+def get_session(token):
+    if not token:
+        return None
+    with live_db() as conn:
+        row = conn.execute(
+            "SELECT user,ip,created,expires FROM sessions WHERE token_hash=?",
+            (hash_token(token),),
+        ).fetchone()
+    if not row or row["expires"] <= int(time.time()):
+        return None
+    return dict(row)
+
+
+def delete_session(token):
+    if not token:
+        return
+    with _lock, live_db() as conn:
+        conn.execute("DELETE FROM sessions WHERE token_hash=?", (hash_token(token),))
+
+
+def delete_all_sessions():
+    with _lock, live_db() as conn:
+        conn.execute("DELETE FROM sessions")
+
+
+def purge_expired_sessions(conn):
+    conn.execute("DELETE FROM sessions WHERE expires<=?", (int(time.time()),))
+
+
+# ---------------------------------------------------------------------------
+# archive migration (old builds kept old_products in the live database)
+# ---------------------------------------------------------------------------
+
+
+def _migrate_old_products_to_archive():
+    with _lock, live_db() as live_conn:
+        row = live_conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='old_products'"
+        ).fetchone()
+        if not row:
+            return
+        old_products = live_conn.execute("SELECT * FROM old_products").fetchall()
+        with archive_db() as archive_conn:
+            for p in old_products:
+                keys = p.keys()
+                archive_conn.execute(
+                    "INSERT OR IGNORE INTO old_products"
+                    " (id, original_id, name, cat, min, max, img, ribbon, featured, custom,"
+                    "  created, revoked_at, revoked_by, sizes)"
+                    " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                    (
+                        p["id"],
+                        p["original_id"],
+                        p["name"],
+                        p["cat"],
+                        p["min"],
+                        p["max"],
+                        p["img"],
+                        p["ribbon"],
+                        p["featured"],
+                        p["custom"],
+                        p["created"],
+                        p["revoked_at"],
+                        p["revoked_by"],
+                        p["sizes"] if "sizes" in keys else None,
+                    ),
+                )
+        live_conn.execute("DROP TABLE IF EXISTS old_products")
+        if old_products:
+            print(f"[db] migrated {len(old_products)} old products to the archive database")
+
+
+# ---------------------------------------------------------------------------
+# backups
+# ---------------------------------------------------------------------------
+
+
+def backup_zip():
+    """Consistent snapshot of both databases + uploaded images, as zip bytes.
+
+    Uses SQLite's online backup API, so it is safe while the shop is running.
+    """
+    buf = io.BytesIO()
+    with (
+        tempfile.TemporaryDirectory() as tmp,
+        zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf,
+    ):
+        for path in (config.DB_FILE, config.ARCHIVE_DB_FILE):
+            name = os.path.basename(path)
+            copy = os.path.join(tmp, name)
+            src, dst = _connect(path), sqlite3.connect(copy)
+            try:
+                src.backup(dst)
+            finally:
+                dst.close()
+                src.close()
+            zf.write(copy, name)
+        if os.path.isdir(config.UPLOAD_DIR):
+            for name in sorted(os.listdir(config.UPLOAD_DIR)):
+                full = os.path.join(config.UPLOAD_DIR, name)
+                if os.path.isfile(full) and not name.startswith("."):
+                    zf.write(full, "uploads/" + name)
+    return buf.getvalue()

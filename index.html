@@ -3,84 +3,76 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>fihi-chifae (فيه شفاء) - Miel, Amlou et Huile d'Argan marocains naturels</title>
-  <meta name="description" content="fihi-chifae... le goût authentique de la nature marocaine, des produits 100% naturels sans additifs. Miel, Amlou, Huile d'Argan, vinaigre, thés et produits de la ruche au Maroc.">
+  <title>فيه شفاء - عسل، أملو وزيت أركان مغربي طبيعي</title>
+  <meta name="description" content="فيه شفاء: عسل مغربي حر، أملو، زيت أركان، زيوت طبيعية، أعشاب وشاي. منتجات طبيعية 100% بدون إضافات، توصيل لجميع أنحاء المغرب والدفع عند الاستلام.">
   <meta name="theme-color" content="#16a34a">
   <link rel="icon" href="assets/logo.jpg" type="image/jpeg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/style.css?v=5">
+  <link rel="stylesheet" href="assets/style.css?v=8">
 </head>
 <body>
 
   <!-- ===== Announcement bar ===== -->
   <div class="announce">
-    <span class="flag" role="img" aria-label="Maroc">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480"><path fill="#c1272d" d="M640 0H0v480h640z"/><path fill="none" stroke="#006233" stroke-width="11.7" d="M320 179.4 284.4 289l93.2-67.6H262.4l93.2 67.6z"/></svg>
+    <span class="flag" role="img" aria-label="المغرب">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480" aria-hidden="true"><path fill="#c1272d" d="M640 0H0v480h640z"/><path fill="none" stroke="#006233" stroke-width="11.7" d="M320 179.4 284.4 289l93.2-67.6H262.4l93.2 67.6z"/></svg>
     </span>
-    <span data-i18n="announce">التوصيل مجاني ابتداءً من 500 درهم، وبخلاف ذلك تكون تكاليف التوصيل 40 درهم.</span>
+    <span data-i18n="announce">التوصيل مجاني ابتداءً من 500 درهم وداخل البهاليل دائماً، وإلا فتكلفة التوصيل 40 درهم.</span>
   </div>
 
   <!-- ===== Header ===== -->
   <header class="header" id="header">
-
-    <!-- top row : language / account / cart -->
     <div class="topbar">
       <div class="topbar-inner">
-        <div class="topbar-left">
-          <div class="lang-select" id="langSelect">
-            <button class="btn-lang" id="langBtn" aria-haspopup="true" aria-expanded="false">
-              <span id="langCurrent">العربية</span>
-              <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-            <div class="lang-menu" id="langMenu">
-              <button class="lang-item" type="button" data-lang="ar">العربية</button>
-              <button class="lang-item" type="button" data-lang="fr">Français</button>
-              <button class="lang-item" type="button" data-lang="en">English</button>
-            </div>
+        <div class="lang-select" id="langSelect">
+          <button class="btn-lang" id="langBtn" type="button" aria-haspopup="true" aria-expanded="false">
+            <span id="langCurrent">العربية</span>
+            <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <div class="lang-menu" id="langMenu">
+            <button class="lang-item" type="button" data-lang="ar">العربية</button>
+            <button class="lang-item" type="button" data-lang="fr">Français</button>
+            <button class="lang-item" type="button" data-lang="en">English</button>
           </div>
         </div>
-        <div class="topbar-right">
-          <a href="admin.html" class="link-account" data-i18n-title="account" title="Mon compte">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" stroke-linecap="round"/></svg>
-            <span data-i18n="account">Mon compte</span>
-          </a>
-        </div>
+        <a href="/admin-login.html" class="link-account" data-i18n-title="account" title="حسابي">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" stroke-linecap="round"/></svg>
+          <span data-i18n="account">حسابي</span>
+        </a>
       </div>
     </div>
 
-    <!-- main row : logo / search / cart -->
     <div class="masthead-inner">
-      <a href="#" class="logo" aria-label="fihi-chifae">
-        <img src="assets/logo.jpg" alt="Logo fihi-chifae">
+      <a href="/" class="logo" aria-label="فيه شفاء">
+        <img src="assets/logo.jpg" alt="شعار فيه شفاء">
         <span>
           <span class="logo-text">فيه <b>شفاء</b></span>
           <span class="logo-sub" data-i18n="masthead-sub">الطبيعة المغربية</span>
         </span>
       </a>
 
-      <div class="search">
-        <input type="search" class="search-input" id="searchInput" placeholder="Rechercher un produit" aria-label="Rechercher un produit" autocomplete="off">
-        <button class="btn-search" id="searchBtn" aria-label="Rechercher">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/></svg>
-          <span data-i18n="search-btn">Rechercher</span>
+      <div class="search" role="search">
+        <input type="search" class="search-input" id="searchInput" placeholder="ابحث عن منتج" aria-label="ابحث عن منتج" autocomplete="off">
+        <button class="btn-search" id="searchBtn" type="button" aria-label="بحث">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3" stroke-linecap="round"/></svg>
+          <span data-i18n="search-btn">بحث</span>
         </button>
       </div>
 
       <div class="header-actions">
-        <button class="header-cart" id="openCart" data-i18n-title="open-cart" aria-label="Ouvrir le panier">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="9" cy="21" r="1.6" fill="currentColor" stroke="none"/><circle cx="20" cy="21" r="1.6" fill="currentColor" stroke="none"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <button class="header-cart" id="openCart" type="button" aria-label="فتح السلة" data-i18n-aria="open-cart">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="9" cy="21" r="1.6" fill="currentColor" stroke="none"/><circle cx="20" cy="21" r="1.6" fill="currentColor" stroke="none"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span class="badge" id="cartCount">0</span>
         </button>
-        <button class="header-cart menu-btn" id="menuBtn" aria-label="Menu">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+        <button class="header-cart menu-btn" id="menuBtn" type="button" aria-label="القائمة" data-i18n-aria="menu">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- category bar (rendered dynamically from API) -->
-    <nav class="catbar" aria-label="Catégories de produits">
+    <nav class="catbar" aria-label="الفئات" data-i18n-aria="categories">
       <div class="container" id="catBar"></div>
     </nav>
   </header>
@@ -89,25 +81,25 @@
   <div class="mobile-menu" id="mobileMenu">
     <div class="mobile-menu-panel">
       <div class="mobile-head">
-        <a href="#" class="logo">
-          <img src="assets/logo.jpg" alt="Logo fihi-chifae">
+        <a href="/" class="logo">
+          <img src="assets/logo.jpg" alt="شعار فيه شفاء">
           <span class="logo-text">فيه <b>شفاء</b></span>
         </a>
-        <button class="close-btn" id="closeMenu" aria-label="Fermer le menu">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg>
+        <button class="close-btn" id="closeMenu" type="button" aria-label="إغلاق" data-i18n-aria="close">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg>
         </button>
       </div>
       <nav class="mobile-nav" id="mobileNav"></nav>
       <div class="mobile-divider"></div>
       <div class="mobile-actions">
-        <a href="admin.html" class="mb-btn mb-btn-outline" data-i18n="account">Mon compte</a>
-        <button class="mb-btn mb-btn-solid" id="mobileCartBtn" data-i18n="view-cart">Voir le panier</button>
+        <button class="mb-btn mb-btn-solid" id="mobileCartBtn" type="button" data-i18n="view-cart">مشاهدة السلة</button>
+        <a class="mb-btn mb-btn-outline" href="/admin-login.html" data-i18n="account">حسابي</a>
+        <a class="mb-btn mb-btn-outline" href="info.html" data-i18n="info-link">معلومات ومساعدة</a>
       </div>
     </div>
   </div>
 
   <main>
-
     <!-- ===== Hero ===== -->
     <section class="hero">
       <div class="container hero-grid">
@@ -116,36 +108,34 @@
           <p data-i18n="hero-sub">العسل المغربي الخالص... كما يجب أن يكون</p>
           <a href="#featured" class="btn-hero" data-i18n="hero-cta">اكتشف منتجاتنا</a>
           <div class="hero-trust">
-            <span class="trust-chip"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="trust-natural">100% طبيعي</span></span>
-            <span class="trust-chip"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" stroke-linejoin="round"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span data-i18n="trust-delivery">التوصيل داخل المغرب</span></span>
-            <span class="trust-chip"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="trust-additives">بدون إضافات</span></span>
+            <span class="trust-chip"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="trust-natural">100% طبيعي</span></span>
+            <span class="trust-chip"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" stroke-linejoin="round"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg><span data-i18n="trust-delivery">التوصيل داخل المغرب</span></span>
+            <span class="trust-chip"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="trust-additives">بدون إضافات</span></span>
           </div>
         </div>
         <div class="hero-visual">
-          <!-- revert to previous hero artwork if the logo is not suitable:
-          <img src="assets/hero.svg?v=4" alt="Miel, Amlou et Huile d'Argan fihi-chifae"> -->
-          <img src="assets/logo.jpg" alt="Logo fihi-chifae">
+          <img src="assets/logo.jpg" alt="شعار فيه شفاء">
           <div class="hero-float hf-1">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linejoin="round"/></svg>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke-linejoin="round"/></svg>
             <div><b data-i18n="trust-natural">100% طبيعي</b><span data-i18n="hf1-sub">ضمان بدون إضافات</span></div>
           </div>
           <div class="hero-float hf-2">
-            <div class="stars">★★★★★</div>
-            <div><b>4,9 / 5</b><span data-i18n="hf2-sub">آراء العملاء</span></div>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01" stroke-linecap="round"/></svg>
+            <div><b data-i18n="hf2-title">الدفع عند الاستلام</b><span data-i18n="hf2-sub">في جميع أنحاء المغرب</span></div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ===== Produits les plus vendus ===== -->
+    <!-- ===== Best sellers ===== -->
     <section class="section" id="featured">
       <div class="container">
         <div class="section-head">
-          <span class="eyebrow" data-i18n="featured-eyebrow">Nos coups de cœur</span>
-          <h2 data-i18n="featured-title">Produits les plus vendus</h2>
-          <p data-i18n="featured-sub">Une sélection des produits préférés de nos clients, directement du cœur de la nature marocaine.</p>
+          <span class="eyebrow" data-i18n="featured-eyebrow">أفضل مبيعاتنا</span>
+          <h2 data-i18n="featured-title">المنتجات الأكثر مبيعاً</h2>
+          <p data-i18n="featured-sub">تشكيلة من المنتجات المفضلة لدى عملائنا، مباشرة من قلب الطبيعة المغربية.</p>
         </div>
-        <div class="featured-grid" id="featuredGrid"></div>
+        <div class="prod-grid" id="featuredGrid"></div>
       </div>
     </section>
 
@@ -153,25 +143,25 @@
     <div class="banner-strip">
       <div class="container">
         <div class="strip-item">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>
-          <div><b data-i18n="strip1-title">Produits frais</b><span data-i18n="strip1-sub">récoltés avec soin</span></div>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2" stroke-linecap="round"/></svg>
+          <div><b data-i18n="strip1-title">منتجات طازجة</b><span data-i18n="strip1-sub">محضّرة بعناية</span></div>
         </div>
         <div class="strip-item">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" stroke-linejoin="round"/></svg>
-          <div><b data-i18n="strip2-title">Livraison rapide</b><span data-i18n="strip2-sub">partout au Maroc</span></div>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" stroke-linejoin="round"/></svg>
+          <div><b data-i18n="strip2-title">توصيل سريع</b><span data-i18n="strip2-sub">في جميع أنحاء المغرب</span></div>
         </div>
         <div class="strip-item">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div><b data-i18n="strip3-title">Paiement à la livraison</b><span data-i18n="strip3-sub">près de chez vous</span></div>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><b data-i18n="strip3-title">الدفع عند الاستلام</b><span data-i18n="strip3-sub">قرب منزلك</span></div>
         </div>
         <div class="strip-item">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <div><b data-i18n="strip4-title">100% Naturel</b><span data-i18n="strip4-sub">sans additifs</span></div>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div><b data-i18n="strip4-title">100% طبيعي</b><span data-i18n="strip4-sub">بدون إضافات</span></div>
         </div>
       </div>
     </div>
 
-    <!-- ===== Catégories (rendered by JS) ===== -->
+    <!-- ===== Categories (rendered by JS) ===== -->
     <section class="cat-sections" id="catalog">
       <div class="container">
         <div id="catSections"></div>
@@ -181,141 +171,170 @@
     <!-- ===== Newsletter ===== -->
     <section class="newsletter">
       <div class="container">
-        <h2 data-i18n="news-title">Recevez les derniers produits et offres exclusives</h2>
-        <p data-i18n="news-sub">directement dans votre boîte mail</p>
-        <form class="newsletter-form" id="newsletterForm">
-          <input type="email" id="newsletterEmail" placeholder="أدخل بريدك الإلكتروني" aria-label="أدخل بريدك الإلكتروني" data-i18n-ph="news_placeholder" required>
-          <button type="submit" data-i18n="news-btn">S'abonner</button>
+        <h2 data-i18n="news-title">توصل بآخر المنتجات والعروض الحصرية</h2>
+        <p data-i18n="news-sub">مباشرة إلى بريدك الإلكتروني</p>
+        <form class="newsletter-form" id="newsletterForm" novalidate>
+          <input type="email" id="newsletterEmail" placeholder="أدخل بريدك الإلكتروني" aria-label="أدخل بريدك الإلكتروني" data-i18n-ph="news_placeholder" autocomplete="email" required>
+          <button type="submit" data-i18n="news-btn">اشترك</button>
         </form>
       </div>
     </section>
-
   </main>
 
   <!-- ===== Footer ===== -->
   <footer class="footer">
     <div class="footer-grid">
       <div class="footer-brand">
-        <a href="#" class="logo">
-          <img src="assets/logo.jpg" alt="Logo fihi-chifae">
+        <a href="/" class="logo">
+          <img src="assets/logo.jpg" alt="شعار فيه شفاء">
           <span class="logo-text">فيه <b>شفاء</b></span>
         </a>
-        <p data-i18n="footer-brand">فيه شفاء علامة مغربية متخصصة في إنتاج وتعبئة العسل الطبيعي ومنتجات الخلية. نقدم عسلاً نقياً 100% ومنتجات تقليدية عالية الجودة من قلب الطبيعة المغربية.</p>
+        <p data-i18n="footer-brand">فيه شفاء علامة مغربية من البهاليل متخصصة في العسل الطبيعي ومنتجات الخلية والزيوت التقليدية، نختارها بعناية من قلب الطبيعة المغربية.</p>
         <div class="socials">
-          <a href="#" class="social" aria-label="Facebook"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.07C24 5.41 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.09 10.13 24v-8.44H7.08v-3.49h3.04V9.41c0-3.02 1.8-4.7 4.54-4.7 1.31 0 2.68.24 2.68.24v2.97h-1.5c-1.5 0-1.96.93-1.96 1.89v2.26h3.32l-.53 3.5h-2.8V24C19.62 23.1 24 18.1 24 12.07z"/></svg></a>
-          <a href="#" class="social" aria-label="Instagram"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg></a>
-          <a href="#" class="social" aria-label="X"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M18.24 2.25h3.31l-7.23 8.26 8.5 11.24h-6.66l-5.21-6.82-5.97 6.82H1.68l7.73-8.84L1.25 2.25h6.83l4.71 6.23 5.45-6.23zm-1.16 17.52h1.83L7.08 4.13H5.12l11.96 15.64z"/></svg></a>
-          <a href="#" class="social" aria-label="WhatsApp"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.6-.91-2.2-.24-.57-.48-.5-.67-.5h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.5 0 1.47 1.07 2.9 1.22 3.1.15.2 2.1 3.2 5.1 4.49.71.3 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.76-.72 2.01-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88a9.83 9.83 0 0 1 7 2.9 9.83 9.83 0 0 1 2.89 7c0 5.45-4.44 9.88-9.9 9.88zm8.42-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.9 11.9 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.9 0-3.18-1.24-6.16-3.47-8.4z"/></svg></a>
-          <a href="#" class="social" aria-label="TikTok"><svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.9 2.9 0 0 1-2.9 2.9 2.9 2.9 0 0 1-2.9-2.9 2.9 2.9 0 0 1 2.9-2.9c.3 0 .58.05.85.13V9.4a6.33 6.33 0 0 0-.85-.06 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.43a8.16 8.16 0 0 0 4.77 1.52V6.44l-.07.25z"/></svg></a>
+          <a href="https://wa.me/212681771457" class="social" target="_blank" rel="noopener" aria-label="WhatsApp"><svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.6-.91-2.2-.24-.57-.48-.5-.67-.5h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.5 0 1.47 1.07 2.9 1.22 3.1.15.2 2.1 3.2 5.1 4.49.71.3 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.76-.72 2.01-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88a9.83 9.83 0 0 1 7 2.9 9.83 9.83 0 0 1 2.89 7c0 5.45-4.44 9.88-9.9 9.88zm8.42-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.9 11.9 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.9 0-3.18-1.24-6.16-3.47-8.4z"/></svg></a>
         </div>
       </div>
 
       <div class="footer-col">
-        <h4 data-i18n="fc1-title">Entreprise</h4>
+        <h4 data-i18n="fc1-title">الشركة</h4>
         <ul>
-          <li><a href="#" data-i18n="fc1-about">À propos de notre marque</a></li>
-          <li><a href="#" data-i18n="fc1-privacy">Politique de confidentialité</a></li>
-          <li><a href="#" data-i18n="fc1-terms">Conditions d'utilisation</a></li>
-          <li><a href="#" data-i18n="fc1-faq">Questions fréquentes</a></li>
+          <li><a href="info.html#about" data-i18n="fc1-about">من نحن</a></li>
+          <li><a href="info.html#products" data-i18n="fc1-products">منتجاتنا وفوائدها</a></li>
+          <li><a href="info.html#privacy" data-i18n="fc1-privacy">سياسة الخصوصية</a></li>
+          <li><a href="info.html#terms" data-i18n="fc1-terms">شروط الاستخدام</a></li>
         </ul>
       </div>
 
       <div class="footer-col">
-        <h4 data-i18n="fc2-title">Aide</h4>
+        <h4 data-i18n="fc2-title">مساعدة</h4>
         <ul>
-          <li><a href="#" data-i18n="fc2-track">Suivre la commande</a></li>
-          <li><a href="#" data-i18n="fc2-ship">Expédition et livraison</a></li>
-          <li><a href="#" data-i18n="fc2-return">Politique de retour</a></li>
-          <li><a href="#" data-i18n="fc2-contact">Contactez-nous</a></li>
+          <li><a href="info.html#faq" data-i18n="fc1-faq">الأسئلة الشائعة</a></li>
+          <li><a href="info.html#shipping" data-i18n="fc2-ship">الشحن والتوصيل</a></li>
+          <li><a href="info.html#returns" data-i18n="fc2-return">سياسة الإرجاع</a></li>
+          <li><a href="https://wa.me/212681771457" target="_blank" rel="noopener" data-i18n="fc2-track">تتبع الطلبية عبر واتساب</a></li>
         </ul>
       </div>
 
       <div class="footer-col footer-contact">
-        <h4 data-i18n="fc3-title">Nous contacter</h4>
+        <h4 data-i18n="fc3-title">تواصل معنا</h4>
         <ul>
-          <li><a href="mailto:contact@fihi-chifae.com" dir="ltr" style="direction:ltr; unicode-bidi:embed; display:inline-block">contact@fihi-chifae.com</a></li>
-          <li><a href="tel:+212600000000" dir="ltr" style="direction:ltr; unicode-bidi:embed; display:inline-block">+212 6 00 00 00 00</a></li>
-        </ul>
-        <ul class="footer-lang">
-          <li><a href="#" class="active" data-lang="ar">العربية</a></li>
-          <li><a href="#" data-lang="fr">Français</a></li>
-          <li><a href="#" data-lang="en">English</a></li>
+          <li><a href="tel:+212681771457" class="ltr-num">+212 681 771 457</a></li>
+          <li><a href="https://wa.me/212681771457" target="_blank" rel="noopener" data-i18n="fc3-wa">واتساب: اطلب أو استفسر</a></li>
+          <li><span data-i18n="fc3-city">البهاليل، إقليم صفرو، المغرب</span></li>
         </ul>
       </div>
     </div>
 
     <div class="footer-bottom">
       <div class="footer-bottom-inner">
-        <p data-i18n="copyright">جميع الحقوق محفوظة © 2026 fihi-chifae</p>
+        <p data-i18n="copyright">جميع الحقوق محفوظة © 2026 فيه شفاء</p>
+        <ul class="footer-lang">
+          <li><a href="#" data-lang="ar">العربية</a></li>
+          <li><a href="#" data-lang="fr">Français</a></li>
+          <li><a href="#" data-lang="en">English</a></li>
+        </ul>
       </div>
     </div>
   </footer>
 
   <!-- ===== Search overlay ===== -->
   <div class="search-panel" id="searchPanel">
-    <div class="search-panel-card">
+    <div class="search-panel-card" role="dialog" aria-modal="true" aria-label="بحث">
       <div class="search-panel-head">
-        <input type="search" id="searchLive" placeholder="Rechercher un produit..." autocomplete="off">
-        <button class="close-btn" id="closeSearch" aria-label="Fermer la recherche">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg>
+        <input type="search" id="searchLive" placeholder="ابحث عن منتج..." autocomplete="off">
+        <button class="close-btn" id="closeSearch" type="button" aria-label="إغلاق" data-i18n-aria="close">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg>
         </button>
       </div>
-      <div class="search-results" id="searchResults"></div>
+      <div class="prod-grid search-results" id="searchResults"></div>
+    </div>
+  </div>
+
+  <!-- ===== Product details ===== -->
+  <div class="pd-overlay" id="productModal" hidden>
+    <div class="pd-card" role="dialog" aria-modal="true" aria-labelledby="pdName">
+      <button class="close-btn pd-close" id="pdClose" type="button" aria-label="إغلاق" data-i18n-aria="close">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg>
+      </button>
+      <div class="pd-media"><img id="pdImg" src="assets/logo.jpg" alt=""></div>
+      <div class="pd-body" id="pdBody"></div>
     </div>
   </div>
 
   <!-- ===== Cart drawer ===== -->
   <div class="overlay" id="overlay"></div>
-  <aside class="cart-drawer" id="cartDrawer" aria-label="Panier">
+  <aside class="cart-drawer" id="cartDrawer" aria-label="السلة">
     <div class="cart-head">
-      <h3 data-i18n="cart-title">Votre panier</h3>
-      <button class="close-btn" id="closeCart" aria-label="Fermer le panier">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg>
+      <h3 id="cartTitle">السلة</h3>
+      <button class="close-btn" id="closeCart" type="button" aria-label="إغلاق" data-i18n-aria="close">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" stroke-linecap="round"/></svg>
       </button>
     </div>
-    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-body" id="cartBody">
+      <div id="cartItems"></div>
+      <form class="checkout-fields" id="checkoutForm" novalidate>
+        <h4 class="checkout-title" data-i18n="checkout-title">معلومات التوصيل</h4>
+        <input type="text" id="checkoutName" maxlength="200" autocomplete="name" required>
+        <input type="tel" id="checkoutPhone" maxlength="30" autocomplete="tel" inputmode="tel" required>
+        <input type="text" id="checkoutCity" maxlength="200" list="cityList" autocomplete="address-level2" required>
+        <input type="text" id="checkoutAddress" maxlength="200" autocomplete="street-address" required>
+        <div class="loc-row">
+          <input type="url" id="checkoutLocation" maxlength="500" autocomplete="off">
+          <button type="button" class="btn-loc" id="btnLocate" data-i18n-aria="use-location" aria-label="استعمل موقعي">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s7-6.2 7-12a7 7 0 1 0-14 0c0 5.8 7 12 7 12z" stroke-linejoin="round"/><circle cx="12" cy="10" r="2.5"/></svg>
+          </button>
+        </div>
+      </form>
+    </div>
     <div class="cart-foot" id="cartFoot">
-      <div class="checkout-fields">
-        <input type="text" id="checkoutName" placeholder="الاسم الكامل" aria-label="الاسم الكامل" autocomplete="name">
-        <input type="tel" id="checkoutPhone" placeholder="رقم الهاتف" aria-label="رقم الهاتف" autocomplete="tel">
+      <div class="cart-lines">
+        <div class="cart-line"><span data-i18n="subtotal-label">المنتجات</span><b id="cartSubtotal"></b></div>
+        <div class="cart-line"><span data-i18n="delivery-label">التوصيل</span><b id="cartDelivery"></b></div>
+        <p class="delivery-hint" id="deliveryHint"></p>
+        <div class="cart-total"><span data-i18n="cart-total-label">المجموع</span><b id="cartTotal"></b></div>
       </div>
-      <div class="cart-total">
-        <span data-i18n="cart-total-label">Total</span>
-        <b id="cartTotal">0,00 د.م.</b>
-      </div>
-      <button class="btn-checkout" id="checkoutBtn" data-i18n="checkout-btn">تأكيد الطلب</button>
-      <a class="btn-whatsapp" id="waBtn" href="#" target="_blank" rel="noopener">
-        <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.4-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.44-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.6-.91-2.2-.24-.57-.48-.5-.67-.5h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.5 0 1.47 1.07 2.9 1.22 3.1.15.2 2.1 3.2 5.1 4.49.71.3 1.27.49 1.7.62.72.23 1.37.2 1.88.12.57-.09 1.76-.72 2.01-1.42.25-.7.25-1.29.17-1.42-.07-.13-.27-.2-.57-.35zM12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88a9.83 9.83 0 0 1 7 2.9 9.83 9.83 0 0 1 2.89 7c0 5.45-4.44 9.88-9.9 9.88zm8.42-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.9 11.9 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.9 0-3.18-1.24-6.16-3.47-8.4z"/></svg>
-        <span data-i18n="wa-chat">شات معنا عبر واتساب</span>
-      </a>
+      <button class="btn-checkout" id="checkoutBtn" type="button" data-i18n="checkout-btn">تأكيد الطلب عبر واتساب</button>
+      <button class="btn-whatsapp" id="waBtn" type="button">
+        <svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.9-9.88a9.83 9.83 0 0 1 7 2.9 9.83 9.83 0 0 1 2.89 7c0 5.45-4.44 9.88-9.9 9.88zm8.42-18.3A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.9c0 2.1.55 4.14 1.59 5.95L.06 24l6.3-1.65a11.9 11.9 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.9 0-3.18-1.24-6.16-3.47-8.4z"/></svg>
+        <span data-i18n="wa-chat">مساعدة عبر المحادثة</span>
+      </button>
     </div>
   </aside>
 
-  <!-- ===== Toast container ===== -->
-  <div class="toasts" id="toasts"></div>
+  <datalist id="cityList">
+    <option value="البهاليل"></option><option value="BHALIL"></option>
+    <option value="صفرو"></option><option value="فاس"></option><option value="مكناس"></option>
+    <option value="الرباط"></option><option value="الدار البيضاء"></option><option value="مراكش"></option>
+    <option value="طنجة"></option><option value="أكادير"></option><option value="وجدة"></option>
+    <option value="Sefrou"></option><option value="Fès"></option><option value="Meknès"></option>
+    <option value="Rabat"></option><option value="Casablanca"></option><option value="Marrakech"></option>
+  </datalist>
 
-  <!-- ===== WhatsApp Chatbot (simple, integrated with order) ===== -->
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+
+  <!-- ===== WhatsApp assistant (guides the customer through the order) ===== -->
   <div id="waBotOverlay" class="wa-bot-overlay" aria-hidden="true">
-    <div class="wa-bot-window" role="dialog" aria-modal="true" aria-label="WhatsApp chatbot">
+    <div class="wa-bot-window" role="dialog" aria-modal="true" aria-label="WhatsApp">
       <div class="wa-bot-header">
-        <div class="wa-bot-avatar"><img src="assets/logo.jpg" alt="فيه شفاء"></div>
+        <div class="wa-bot-avatar"><img src="assets/logo.jpg" alt=""></div>
         <div class="wa-bot-info">
           <b data-i18n="wa_bot_name">فيه شفاء - المساعد</b>
           <span data-i18n="wa_bot_status">متصل الآن • يرد عادة خلال دقائق</span>
         </div>
-        <button class="wa-bot-close" id="waBotClose" aria-label="إغلاق">✕</button>
+        <button class="wa-bot-close" id="waBotClose" type="button" aria-label="إغلاق" data-i18n-aria="close">✕</button>
       </div>
       <div class="wa-bot-messages" id="waBotMessages"></div>
       <div class="wa-bot-quick" id="waBotQuick"></div>
       <div class="wa-bot-inputbar">
         <input type="text" id="waBotInput" placeholder="اكتب رسالتك..." aria-label="اكتب رسالتك" autocomplete="off" data-i18n-ph="wa_bot_placeholder">
-        <button id="waBotSend" aria-label="إرسال">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <button id="waBotSend" type="button" aria-label="إرسال" data-i18n-aria="send">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 2L11 13M22 2L15 22L11 13L2 9L22 2Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
       </div>
     </div>
   </div>
 
-  <script src="assets/main.js?v=11"></script>
+  <script src="assets/delivery.js?v=1"></script>
+  <script src="assets/main.js?v=15"></script>
 </body>
 </html>

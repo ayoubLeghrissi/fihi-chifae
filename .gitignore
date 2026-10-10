@@ -1,40 +1,42 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
 .venv/
 venv/
-.env
-.env.*
-!.env.example
 .coverage
+coverage.xml
 htmlcov/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 
-# App
-fihi-chifae.db
-fihi-chifae.db-journal
-fihi-chifae.db-shm
-fihi-chifae.db-wal
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Data — never committed, lives on the production volume (FIHI_DATA_DIR)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+data/
 assets/uploads/*
 !assets/uploads/.gitkeep
+backups/
+
+# Build
 dist/
 build/
 *.spec
 
-# OS
+# OS / tooling
 .DS_Store
 Thumbs.db
 *.log
-
-# Secrets
-*.pem
-*.key
-
-# Playwright
+install.cmd
 .playwright-mcp/
 test-results/
 playwright-report/

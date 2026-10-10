@@ -6,14 +6,14 @@ PY            ?= python
 PIP           ?= $(PY) -m pip
 PORT          ?= 8000
 HOST          ?= 0.0.0.0
-DB            ?= fihi-chifae.db
+
 IMAGE_NAME    ?= fihi-chifae
 GHCR_IMAGE    ?= ghcr.io/fihi-chifae/$(IMAGE_NAME)
 VERSION       ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo dev)
 PLATFORMS     ?= linux/amd64,linux/arm64
 
 .DEFAULT_GOAL := help
-.PHONY: help install launch dev test lint format format-check security audit bandit pip-audit clean binary binary-zipapp binary-pyinstaller docker-build docker-run docker-scan push github-init deploy deploy-fly deploy-render binary-check
+.PHONY: help install launch dev test lint format format-check security audit bandit pip-audit clean docker-build docker-run docker-scan push github-init deploy deploy-railway deploy-fly deploy-render backup
 
 help: ## Show this help
 	@echo "fihi-chifae — available targets:"
@@ -35,21 +35,19 @@ dev: ## Launch with auto-reload (watchdog, if installed)
 	$(PY) server.py --host $(HOST) --port $(PORT) --open
 
 # ── quality ─────────────────────────────────────────────────────────────
-lint: ## Lint (ruff + flake8)
-	ruff check app server.py || true
-	flake8 app server.py --max-line-length=100 --extend-ignore=E203,W503 || true
+lint: ## Lint (ruff)
+	ruff check app server.py docker-entrypoint.py
 
 format: ## Auto-format (black + ruff --fix)
-	black app server.py
+	black app server.py tests
 	ruff check --fix app server.py || true
 
 format-check: ## Check formatting without modifying
-	black --check app server.py
+	black --check app server.py tests
 	ruff check app server.py
 
-test: ## Run tests (pytest + compileall smoke)
-	$(PY) -m compileall app server.py
-	@if [ -d tests ]; then $(PY) -m pytest -q --cov=app --cov-report=term-missing 2>/dev/null || $(PY) -c "from app import db, catalog; print('smoke ok (pytest not installed)')"; else echo "no tests/ yet — running smoke test" && $(PY) -c "from app import db, catalog; print('smoke ok')"; fi
+test: ## Run tests (each test deletes everything it creates, see tests/conftest.py)
+	$(PY) -m pytest -q --cov=app --cov-report=term-missing
 
 security: bandit pip-audit ## Run all security checks
 
@@ -61,29 +59,12 @@ pip-audit: ## pip-audit for known CVEs
 
 audit: pip-audit
 
-# ── binary ──────────────────────────────────────────────────────────────
-binary: binary-zipapp ## Default binary = zipapp (portable, no compiler needed)
-
-binary-zipapp: ## Build portable zipapp (dist/fihi-chifae.pyz)
-	@echo "→ building zipapp..."
-	@$(PY) -c "import pathlib; pathlib.Path('dist').mkdir(parents=True, exist_ok=True)"
-	$(PY) -m zipapp app -m "serve:main" -o dist/fihi-chifae.pyz -p "/usr/bin/env python3" -c
-	@echo "✔ dist/fihi-chifae.pyz  (run: python dist/fihi-chifae.pyz --port 8000 — note: serve static files from original dir, for full bundle use 'make docker-build')"
-
-binary-pyinstaller: ## Build native executable via PyInstaller (dist/fihi-chifae.exe)
-	@echo "→ building PyInstaller binary (may take a minute)..."
-	pyinstaller --onefile --name fihi-chifae --add-data "assets;assets" --add-data "index.html;." --add-data "admin.html;." --add-data "admin-add.html;." --add-data "admin-reset.html;." server.py --distpath dist --workpath build --specpath build
-	@echo "✔ dist/fihi-chifae(.exe)"
-
-binary-check: binary ## Verify binary runs
-	$(PY) dist/fihi-chifae.pyz --help 2>/dev/null || ./dist/fihi-chifae --help 2>/dev/null || echo "binary check: run manually"
-
 # ── docker ──────────────────────────────────────────────────────────────
 docker-build: ## Build Docker image (local)
 	docker build -t $(IMAGE_NAME):$(VERSION) -t $(IMAGE_NAME):latest .
 
-docker-run: ## Run Docker image locally (PORT=$(PORT))
-	docker run --rm -p $(PORT):8000 --env PORT=8000 --env FIHI_ADMIN_PASSWORD=admin2026 $(IMAGE_NAME):latest
+docker-run: ## Run the image like production: data kept in the named volume fihi-data
+	docker run --rm -p $(PORT):8000 -v fihi-data:/data --env FIHI_ADMIN_PASSWORD=$${FIHI_ADMIN_PASSWORD:-change-me-please} $(IMAGE_NAME):latest
 
 docker-scan: ## Trivy scan (if trivy installed)
 	trivy image --severity HIGH,CRITICAL $(IMAGE_NAME):latest 2>/dev/null || echo "install trivy: https://aquasecurity.github.io/trivy"
@@ -96,7 +77,7 @@ github-init: ## Init git repo, add remote, first commit (set REMOTE=url)
 push: ## git push (lint+test before push)
 	$(MAKE) lint
 	$(MAKE) test
-	git add .
+	git add -A -- . ':!*.db'
 	git status
 	@echo "→ git commit & push"
 	git branch -M main
@@ -104,7 +85,13 @@ push: ## git push (lint+test before push)
 	git push origin main
 
 # ── deploy ──────────────────────────────────────────────────────────────
-deploy: deploy-fly ## Default deploy = Fly.io
+deploy: deploy-railway ## Default deploy = Railway
+
+deploy-railway: ## Deploy to Railway (requires: railway login && railway link)
+	railway up --service $${RAILWAY_SERVICE:-fihi-chifae}
+
+backup: ## Download a backup zip from production (needs URL and a logged-in COOKIE=fc_session=...)
+	@if [ -z "$(URL)" ] || [ -z "$(COOKIE)" ]; then echo "usage: make backup URL=https://... COOKIE=fc_session=..."; else mkdir -p backups && curl -fsS -H "Cookie: $(COOKIE)" "$(URL)/api/v1/admin/backup" -o backups/fihi-chifae-$$(date +%Y%m%d-%H%M).zip && echo "✔ saved in backups/"; fi
 
 deploy-fly: ## Deploy to Fly.io (requires flyctl auth & fly.toml)
 	@if [ ! -f fly.toml ]; then echo "fly.toml not found — run: fly launch --no-deploy"; else fly deploy --ha=false; fi

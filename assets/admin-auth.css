@@ -1,41 +1,65 @@
-/* fihi-chifae admin login overlay */
-.auth-overlay{
-  position:fixed;inset:0;z-index:1000;display:grid;place-items:center;
-  background:rgba(7,48,26,.55);backdrop-filter:blur(6px);padding:1rem;
+/* fihi-chifae admin : shared styles (login card, form fields, toasts) */
+:root{
+  --green-50:#EEF8F1;--green-100:#DDF0E3;--green-200:#B8E0C8;--green-300:#7EC79B;
+  --green-400:#4AAA6F;--green-500:#229D4E;--green-600:#16A34A;--green-700:#12843D;
+  --green-800:#0E5E2D;--green-900:#0B4523;--green-950:#07301A;
+  --ink:#0B4523;--body:#2E3A32;--muted:#5B6B60;--line:#E3EDE6;--white:#fff;--danger:#B91C1C;
+}
+
+/* ---- login / reset pages ---- */
+.auth-page{
+  margin:0;min-height:100vh;display:grid;place-items:center;padding:1rem;
+  font-family:"Cairo","Segoe UI",system-ui,Arial,sans-serif;color:var(--body);
+  background:radial-gradient(1200px 500px at 50% -10%, var(--green-700), transparent 60%), var(--green-950);
 }
 .auth-card{
-  width:100%;max-width:24rem;background:#fff;border-radius:18px;box-shadow:0 30px 60px -20px rgba(7,48,26,.5);
-  padding:1.75rem 1.5rem;text-align:center;
+  width:100%;max-width:24rem;background:#fff;border-radius:18px;box-shadow:0 30px 60px -20px rgba(0,0,0,.5);
+  padding:1.75rem 1.5rem;
 }
 .auth-brand{display:flex;align-items:center;justify-content:center;gap:.6rem;font-weight:800;font-size:1.05rem;color:var(--green-900);margin-bottom:.4rem}
 .auth-brand img{width:44px;height:44px;border-radius:12px;object-fit:cover}
-.auth-card h2{font-size:1.15rem;color:var(--green-950);margin:.4rem 0 .2rem}
-.auth-intro{font-size:.85rem;color:var(--muted);margin-bottom:1.1rem}
-.auth-form{display:grid;gap:.9rem;text-align:right}
-.auth-field{display:flex;flex-direction:column;gap:.3rem;text-align:right}
-.auth-field label{font-size:.8rem;font-weight:700;color:var(--green-900);text-align:right}
+.auth-brand b{color:var(--green-600)}
+.auth-card h1{font-size:1.15rem;color:var(--green-950);margin:.4rem 0 .2rem;text-align:center}
+.auth-intro{font-size:.85rem;color:var(--muted);margin:0 0 1.1rem;text-align:center}
+.auth-form{display:grid;gap:.9rem}
+.auth-form[hidden]{display:none}
+.auth-field{display:flex;flex-direction:column;gap:.3rem}
+.auth-field label{font-size:.8rem;font-weight:700;color:var(--green-900)}
 .auth-field input{
   height:2.7rem;border:1.5px solid var(--green-200);border-radius:10px;padding:0 .8rem;
-  font-family:inherit;font-size:.92rem;color:var(--ink);background:#fff;width:100%;text-align:right;direction:rtl;
+  font-family:inherit;font-size:.92rem;color:var(--ink);background:#fff;width:100%;box-sizing:border-box;
 }
-.auth-field input::placeholder{color:var(--muted);text-align:right}
 .auth-field input:focus{outline:none;border-color:var(--green-600);box-shadow:0 0 0 3px rgba(22,163,74,.15)}
 .btn-login{
-  height:2.9rem;border-radius:999px;background:var(--green-600);color:#fff;font-weight:800;font-size:.95rem;
-  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;transition:background .2s,transform .15s;
+  height:2.9rem;border:0;border-radius:999px;background:var(--green-600);color:#fff;font-weight:800;font-size:.95rem;
+  font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  width:100%;text-decoration:none;transition:background .2s,transform .15s;
 }
 .btn-login:hover{background:var(--green-800);transform:translateY(-1px)}
 .btn-login:disabled{opacity:.6;cursor:not-allowed;transform:none}
-.auth-mfa-field{display:flex;flex-direction:column;gap:.3rem;text-align:right}
-.auth-mfa-field label{font-size:.8rem;font-weight:700;color:var(--green-900)}
-.auth-mfa-field input{
-  height:2.7rem;border:1.5px solid var(--green-200);border-radius:10px;padding:0 .8rem;
-  font-family:inherit;font-size:.92rem;color:var(--ink);background:#fff;width:100%;text-align:right;direction:rtl;
-}
-.auth-mfa-field input:focus{outline:none;border-color:var(--green-600);box-shadow:0 0 0 3px rgba(22,163,74,.15)}
-.auth-note{font-size:.72rem;color:var(--muted)}
-.auth-error{min-height:1.2rem;font-size:.82rem;font-weight:600;color:#B3261E;text-align:center}
-.auth-links{margin:.2rem 0 0;text-align:right}
-.auth-links a{font-size:.78rem;color:var(--green-800);font-weight:700;cursor:pointer;text-decoration:none}
-.auth-links a:hover{text-decoration:underline}
-.auth-foot{font-size:.72rem;color:var(--muted);margin-top:.8rem;text-align:center}
+.auth-error{min-height:1.2rem;font-size:.82rem;font-weight:600;color:var(--danger);text-align:center;margin:0}
+.auth-error.ok{color:var(--green-800)}
+.auth-links{margin:.2rem 0 0;text-align:center}
+.auth-links a,.auth-links button{font:inherit;font-size:.8rem;color:var(--green-800);font-weight:700;cursor:pointer;background:none;border:0;text-decoration:none}
+.auth-links a:hover,.auth-links button:hover{text-decoration:underline}
+.ok-box{text-align:center;display:grid;gap:1rem}
+.ok-box[hidden]{display:none}
+
+/* ---- consistent field alignment (RTL admin): text and placeholders always on the
+   start side, whatever the language typed. LTR-only values (phone, URL, e-mail,
+   numbers) keep their left-to-right reading order but stay right-aligned. ---- */
+[dir="rtl"] input,[dir="rtl"] textarea,[dir="rtl"] select{text-align:right}
+[dir="rtl"] input::placeholder,[dir="rtl"] textarea::placeholder{text-align:right}
+[dir="rtl"] input[type="tel"],[dir="rtl"] input[type="url"],[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="number"],[dir="rtl"] input[type="password"]{direction:ltr;text-align:right}
+input::placeholder,textarea::placeholder{unicode-bidi:plaintext;color:var(--muted);opacity:1}
+/* suggestion lists (datalist) keep working while typing, without the browser arrow */
+input[list]::-webkit-calendar-picker-indicator{display:none!important}
+
+/* ---- admin toasts ---- */
+.admin-toasts{pointer-events:none;position:fixed;bottom:1rem;inset-inline-start:1rem;z-index:2000;display:flex;flex-direction:column;gap:.5rem;max-width:min(90vw,24rem)}
+.admin-toast{pointer-events:auto;background:#fff;border:1px solid var(--line);border-inline-start:4px solid var(--green-600);border-radius:10px;
+  box-shadow:0 12px 30px -10px rgba(7,48,26,.35);padding:.65rem .9rem;font-size:.86rem;font-weight:700;color:var(--green-950);
+  transition:opacity .3s,transform .3s}
+.admin-toast.is-error{border-inline-start-color:var(--danger);color:var(--danger)}
+.admin-toast.out{opacity:0;transform:translateY(6px)}
